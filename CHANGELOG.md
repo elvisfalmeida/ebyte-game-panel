@@ -1,5 +1,21 @@
 # 📋 Changelog
 
+## Unreleased
+
+### ✨ Added
+
+- **Extended Palworld settings GUI** — automatically discovers settings from the
+  installed game version, exposes 115 editable world options with inferred
+  field types, and adds search by label, key, or description.
+- **Palworld settings documentation** — documents type inference, protected
+  operational values, the save workflow, and upstream synchronization.
+
+### 🔧 Changed
+
+- **Self-update source** — installation, update, rollback, and backend defaults
+  now keep deployments on `elvisfalmeida/game-panel` instead of silently
+  switching back to the OVHcloud repository.
+
 ## v1.2.0 — 2026-07-30
 
 Adds **Project Zomboid**, a generic **server wipe**, and **archive extraction** in the File Manager.

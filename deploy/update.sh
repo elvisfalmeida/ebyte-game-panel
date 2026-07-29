@@ -78,7 +78,7 @@ ensure_runtime_env_defaults() {
   append_env_if_missing 'TELEMETRY_ENABLED' "true"
   append_env_if_missing 'TELEMETRY_API_BASE_URL' "$current_db_api_base_url"
   append_env_if_missing 'GAMEPANEL_APP_ROOT' "$APP_ROOT"
-  append_env_if_missing 'GAMEPANEL_REPOSITORY_URL' "https://github.com/ovh/game-panel.git"
+  append_env_if_missing 'GAMEPANEL_REPOSITORY_URL' "https://github.com/elvisfalmeida/game-panel.git"
 }
 
 wait_for_stack() {

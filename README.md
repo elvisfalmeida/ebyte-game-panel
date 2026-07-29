@@ -16,6 +16,9 @@
 
 OVHcloud Game Panel is an **open-source, self-hosted** control panel to deploy, run, and monitor your game servers — **without ever touching the command line**. Spin up a Minecraft, Counter-Strike 2, Hytale, Palworld, or Project Zomboid server in a few clicks, then manage its files, backups, player access, and performance from a single modern dashboard. 🚀
 
+> This fork extends Palworld support with a searchable GUI for nearly every setting
+> exposed by the installed game version. See [Palworld settings](docs/PALWORLD_SETTINGS.md).
+
 ## ✨ Features
 
 - 🎛️ Complete server lifecycle management (create, start, stop, restart…).
@@ -69,6 +72,14 @@ cd game-panel
 sudo bash ./deploy/install.sh
 ```
 
+For the extended Palworld settings included in this fork, clone:
+
+```bash
+git clone https://github.com/elvisfalmeida/game-panel.git
+cd game-panel
+sudo bash ./deploy/install.sh
+```
+
 During installation, you'll be prompted for:
 
 - Domain name
@@ -92,6 +103,7 @@ Under the hood, a **React + Vite** frontend talks to a **Node.js** backend (Expr
 ## 📚 Documentation & support
 
 - 📋 [Changelog](CHANGELOG.md)
+- 🌎 [Extended Palworld settings](docs/PALWORLD_SETTINGS.md)
 - 📡 [Telemetry](docs/TELEMETRY.md)
 - 💬 [Contact OVHcloud support](https://www.ovhcloud.com/en/contact/)
 - 🎮 [OVHcloud Discord](https://discord.gg/ovhcloud)
