@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useLanguage } from '../../contexts/LanguageContext';
 import {
   AlertCircle,
   Check,
@@ -131,6 +132,7 @@ export function GameServersDesktopTable({
   sortOrder,
   handleSort,
 }: GameServersDesktopTableProps) {
+  const { t } = useLanguage();
   const { theme } = useTheme();
   const isDark = theme === 'dark';
 
@@ -176,8 +178,8 @@ export function GameServersDesktopTable({
   const METRIC_LABELS: Record<MetricType, string> = {
     cpu: 'CPU',
     memory: 'RAM',
-    disk: 'Disk',
-    network: 'Network',
+    disk: t('servers.disk', 'Disk'),
+    network: t('servers.network', 'Network'),
   };
 
   const powerButtonClass =
@@ -198,7 +200,7 @@ export function GameServersDesktopTable({
                 tone="ghost"
                 className="flex h-auto items-center gap-2 border-none bg-transparent p-0 text-xs font-semibold uppercase tracking-wider text-inherit hover:text-[var(--color-cyan-400)]"
               >
-                Server Name
+                {t('servers.serverName', 'Server Name')}
                 {getSortIcon(sortField, sortOrder, 'name')}
               </AppButton>
             </th>
@@ -211,11 +213,11 @@ export function GameServersDesktopTable({
                 tone="ghost"
                 className="flex h-auto items-center gap-2 border-none bg-transparent p-0 text-xs font-semibold uppercase tracking-wider text-inherit hover:text-[var(--color-cyan-400)]"
               >
-                Game
+                {t('servers.game', 'Game')}
                 {getSortIcon(sortField, sortOrder, 'game')}
               </AppButton>
             </th>
-            <th className={`text-left ${textTertiary} text-xs font-semibold uppercase tracking-wider py-3 px-4`}>Connection</th>
+            <th className={`text-left ${textTertiary} text-xs font-semibold uppercase tracking-wider py-3 px-4`}>{t('servers.connection', 'Connection')}</th>
             <th
               aria-sort={sortField === 'status' ? (sortOrder === 'asc' ? 'ascending' : 'descending') : 'none'}
               className={`text-left ${textTertiary} text-xs font-semibold uppercase tracking-wider py-3 px-4`}
@@ -225,13 +227,13 @@ export function GameServersDesktopTable({
                 tone="ghost"
                 className="flex h-auto items-center gap-2 border-none bg-transparent p-0 text-xs font-semibold uppercase tracking-wider text-inherit hover:text-[var(--color-cyan-400)]"
               >
-                Status
+                {t('servers.status', 'Status')}
                 {getSortIcon(sortField, sortOrder, 'status')}
               </AppButton>
             </th>
             <th className={`text-left ${textTertiary} text-xs font-semibold uppercase tracking-wider py-3 px-4`}>
               <div className="flex items-center gap-1.5">
-                Server Metrics
+                {t('servers.metrics', 'Server Metrics')}
                 <div
                   className="relative ml-1"
                   onKeyDown={(e) => {
@@ -242,11 +244,11 @@ export function GameServersDesktopTable({
                     type="button"
                     ref={metricsButtonRef}
                     onClick={() => setMetricsPopoverOpen((v) => !v)}
-                    aria-label="Customize visible metrics"
+                    aria-label={t('servers.customizeMetrics', 'Customize visible metrics')}
                     aria-haspopup="true"
                     aria-expanded={metricsPopoverOpen}
                     className={`rounded p-0.5 transition-colors hover:bg-gray-700/60 ${metricsPopoverOpen ? 'text-[var(--color-cyan-400)]' : ''}`}
-                    title="Customize visible metrics"
+                    title={t('servers.customizeMetrics', 'Customize visible metrics')}
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5" />
                   </button>
@@ -290,18 +292,18 @@ export function GameServersDesktopTable({
                 </div>
               </div>
             </th>
-            <th className={`text-left ${textTertiary} text-xs font-semibold uppercase tracking-wider py-3 px-4`}>Power</th>
-            <th className={`text-left ${textTertiary} text-xs font-semibold uppercase tracking-wider py-3 px-4`}>Management</th>
-            <th className={`text-center ${textTertiary} text-xs font-semibold uppercase tracking-wider py-3 px-4`}>Delete</th>
+            <th className={`text-left ${textTertiary} text-xs font-semibold uppercase tracking-wider py-3 px-4`}>{t('servers.power', 'Power')}</th>
+            <th className={`text-left ${textTertiary} text-xs font-semibold uppercase tracking-wider py-3 px-4`}>{t('servers.management', 'Management')}</th>
+            <th className={`text-center ${textTertiary} text-xs font-semibold uppercase tracking-wider py-3 px-4`}>{t('servers.delete', 'Delete')}</th>
           </tr>
         </thead>
         <tbody>
           {filteredAndSortedServers.length === 0 && (
             <tr>
               <td colSpan={8} className="py-12 text-center">
-                <p className={`text-sm ${textTertiary}`}>No game servers yet.</p>
+                <p className={`text-sm ${textTertiary}`}>{t('servers.none', 'No game servers yet.')}</p>
                 <p className={`mt-1 text-xs ${textTertiary}`}>
-                  Use “Add Game Server” below to install your first one.
+                  {t('servers.noneHint', 'Use “Add Game Server” to install your first one.')}
                 </p>
               </td>
             </tr>
@@ -730,12 +732,11 @@ export function GameServersDesktopTable({
         <span className={`inline-flex h-6 w-6 items-center justify-center self-center transition-colors ${isDark ? 'text-[var(--color-cyan-400)] group-hover:text-white' : '!text-white'}`}>
           <Plus className="h-5 w-5 stroke-[3]" />
         </span>
-        <span className="self-center leading-none">Add Game Server</span>
+        <span className="self-center leading-none">{t('servers.add', 'Add Game Server')}</span>
       </AppButton>
     </div>
     </div>
   );
 }
-
 
 
