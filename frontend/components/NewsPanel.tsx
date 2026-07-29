@@ -12,9 +12,11 @@ import {
   Settings,
   Shield,
   Sparkles,
+  X,
 } from 'lucide-react';
 import { apiClient, type CatalogNewsItem } from '../utils/api';
 import { AppBadge, AppButton, AppCard } from '../src/ui/components';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const NEWS_ICON_KEYS = [
   'server',
@@ -47,10 +49,10 @@ const normalizeNewsIconKey = (iconKey: string | null | undefined): NewsIconKey =
   return NEWS_ICON_KEY_SET.has(normalized) ? (normalized as NewsIconKey) : 'news';
 };
 
-const formatNewsDate = (timestamp: number): string => {
+const formatNewsDate = (timestamp: number, locale: string): string => {
   const parsed = Number(timestamp);
   if (!Number.isFinite(parsed)) return '-';
-  return new Date(parsed).toLocaleDateString('en-US', {
+  return new Date(parsed).toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -79,6 +81,8 @@ function renderDescriptionWithLinks(text: string) {
 }
 
 export function NewsPanel() {
+  const { locale, t } = useLanguage();
+  const [visible, setVisible] = useState(() => localStorage.getItem('gp_news_visible') !== 'false');
   const [newsItems, setNewsItems] = useState<CatalogNewsItem[]>([]);
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -142,6 +146,10 @@ export function NewsPanel() {
 
   const currentNews = newsItems[currentNewsIndex] ?? null;
   const currentNewsIconKey = normalizeNewsIconKey(currentNews?.iconKey);
+  const setNewsVisible = (next: boolean) => {
+    localStorage.setItem('gp_news_visible', String(next));
+    setVisible(next);
+  };
 
   const getNewsIcon = (iconType: string) => {
     const normalized = normalizeNewsIconKey(iconType);
@@ -169,14 +177,31 @@ export function NewsPanel() {
     }
   };
 
+  if (!visible) {
+    return (
+      <AppButton tone="ghost" onClick={() => setNewsVisible(true)} className="text-xs text-gray-400">
+        {t('news.show', 'Show news')}
+      </AppButton>
+    );
+  }
+
   return (
     <AppCard
       className="w-full overflow-hidden rounded-lg border border-gray-800 shadow-[0_4px_20px_rgba(2,6,23,0.5),0_1px_4px_rgba(2,6,23,0.25)]"
       role="region"
-      aria-label="News carousel"
+      aria-label={t('news.title', 'News')}
       aria-roledescription="carousel"
     >
       <div className="relative flex flex-col sm:flex-row sm:items-center gap-3 p-4 pb-6 sm:pb-4 bg-gradient-to-r from-[var(--gp-ods-accent-secondary)]/10 to-transparent">
+        <AppButton
+          tone="ghost"
+          onClick={() => setNewsVisible(false)}
+          className="absolute right-2 top-2 h-7 w-7 border-none p-1 text-gray-500 hover:text-white"
+          aria-label={t('news.hide', 'Hide news')}
+          title={t('news.hide', 'Hide news')}
+        >
+          <X className="h-4 w-4" />
+        </AppButton>
         {currentNews ? (
           <>
             <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center bg-[var(--gp-ods-accent-primary)]/20 text-[var(--color-cyan-400)]">
@@ -201,7 +226,7 @@ export function NewsPanel() {
 
             <div className="flex items-center gap-3 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-start">
               <span className="text-xs text-gray-400 whitespace-nowrap">
-                {formatNewsDate(currentNews.date)}
+                {formatNewsDate(currentNews.date, locale)}
               </span>
               {newsItems.length > 1 && (
                 <div className="flex items-center gap-1">
@@ -209,7 +234,7 @@ export function NewsPanel() {
                     onClick={prevNews}
                     tone="ghost"
                     className="h-7 w-7 rounded border-none bg-transparent p-1.5 transition-colors hover:bg-gray-700"
-                    aria-label="Previous news"
+                    aria-label={t('news.previous', 'Previous news')}
                   >
                     <ChevronLeft className="w-4 h-4 text-gray-400" />
                   </AppButton>
@@ -220,7 +245,7 @@ export function NewsPanel() {
                     onClick={nextNews}
                     tone="ghost"
                     className="h-7 w-7 rounded border-none bg-transparent p-1.5 transition-colors hover:bg-gray-700"
-                    aria-label="Next news"
+                    aria-label={t('news.next', 'Next news')}
                   >
                     <ChevronRight className="w-4 h-4 text-gray-400" />
                   </AppButton>
@@ -228,8 +253,8 @@ export function NewsPanel() {
                     onClick={() => setIsPaused((v) => !v)}
                     tone="ghost"
                     className="h-7 w-7 rounded border-none bg-transparent p-1.5 transition-colors hover:bg-gray-700"
-                    aria-label={isPaused ? 'Resume auto-scroll' : 'Pause auto-scroll'}
-                    title={isPaused ? 'Resume' : 'Pause'}
+                    aria-label={isPaused ? t('news.resume', 'Resume') : t('news.pause', 'Pause')}
+                    title={isPaused ? t('news.resume', 'Resume') : t('news.pause', 'Pause')}
                   >
                     {isPaused ? <Play className="w-3.5 h-3.5 text-gray-400" /> : <Pause className="w-3.5 h-3.5 text-gray-400" />}
                   </AppButton>
@@ -263,10 +288,10 @@ export function NewsPanel() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
                 <Sparkles className="w-4 h-4 text-[var(--color-cyan-400)]" />
-                <h3 className="font-semibold text-white text-sm md:text-base">No news published</h3>
+                <h3 className="font-semibold text-white text-sm md:text-base">{t('news.none', 'No news published')}</h3>
               </div>
               <p className="text-xs md:text-sm text-gray-400">
-                News from the database will appear here.
+                {t('news.noneDescription', 'News from the database will appear here.')}
               </p>
             </div>
           </>
@@ -275,5 +300,4 @@ export function NewsPanel() {
     </AppCard>
   );
 }
-
 

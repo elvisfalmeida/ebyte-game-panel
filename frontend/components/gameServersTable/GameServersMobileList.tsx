@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import type { GameServer } from '../../types/gameServer';
+import { useLanguage } from '../../contexts/LanguageContext';
 import type { AuthUser } from '../../utils/permissions';
 import { PUBLIC_CONNECTION_HOST } from '../../utils/api';
 import {
@@ -81,12 +82,13 @@ export function GameServersMobileList({
   canInstall,
   onOpenInstallModal,
 }: GameServersMobileListProps) {
+  const { t } = useLanguage();
   return (
     <div className="gp-game-servers-mobile lg:hidden space-y-3">
       {filteredAndSortedServers.length === 0 && (
         <div className="rounded-lg border border-dashed border-gray-700 p-6 text-center">
-          <p className="text-sm text-gray-400">No game servers yet.</p>
-          <p className="mt-1 text-xs text-gray-500">Use “Add Game Server” to install your first one.</p>
+          <p className="text-sm text-gray-400">{t('servers.none', 'No game servers yet.')}</p>
+          <p className="mt-1 text-xs text-gray-500">{t('servers.noneHint', 'Use “Add Game Server” to install your first one.')}</p>
         </div>
       )}
       {filteredAndSortedServers.map((server) => {
@@ -419,13 +421,12 @@ export function GameServersMobileList({
             <span className="inline-flex h-6 w-6 items-center justify-center text-[var(--color-cyan-400)] group-hover:text-white transition-colors">
               <Plus className="h-5 w-5 stroke-[3]" />
             </span>
-            <span>Add Game Server</span>
+            <span>{t('servers.add', 'Add Game Server')}</span>
           </AppButton>
         </div>
       </div>
     </div>
   );
 }
-
 
 

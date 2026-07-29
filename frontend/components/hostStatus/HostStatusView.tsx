@@ -4,6 +4,7 @@ import { Activity, Cpu, Network, TrendingUp, TrendingDown, HardDrive } from 'luc
 import { AppCard } from '../../src/ui/components';
 import { ODS_CHART_THEME } from '../charts/theme';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useLanguage } from '../../contexts/LanguageContext';
 import {
   AreaChart,
   Area,
@@ -130,6 +131,7 @@ export const HostStatusView = memo(function HostStatusView({
   formatSpeed,
 }: HostStatusViewProps) {
   const { theme } = useTheme();
+  const { t } = useLanguage();
   const isDark = theme === 'dark';
   const historyCurveColor = ODS_CHART_THEME.cpu;
   const usageBarColor = ODS_CHART_THEME.progressCpu;
@@ -145,7 +147,7 @@ export const HostStatusView = memo(function HostStatusView({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Cpu className="w-5 h-5" style={{ color: ODS_CHART_THEME.cpu }} />
-              <span className={`${textSecondary} text-sm`}>CPU Usage</span>
+              <span className={`${textSecondary} text-sm`}>{t('host.cpuUsage', 'CPU Usage')}</span>
             </div>
           </div>
           <div className={`text-3xl font-bold ${textPrimary} mb-2`}>{cpuUsage}%</div>
@@ -161,7 +163,7 @@ export const HostStatusView = memo(function HostStatusView({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Activity className="w-5 h-5" style={{ color: ODS_CHART_THEME.ram }} />
-              <span className={`${textSecondary} text-sm`}>RAM Usage</span>
+              <span className={`${textSecondary} text-sm`}>{t('host.ramUsage', 'RAM Usage')}</span>
             </div>
           </div>
           <div className={`text-3xl font-bold ${textPrimary} mb-2`}>{ramUsage}%</div>
@@ -177,7 +179,7 @@ export const HostStatusView = memo(function HostStatusView({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <HardDrive className="w-5 h-5" style={{ color: ODS_CHART_THEME.disk }} />
-              <span className={`${textSecondary} text-sm`}>Disk Usage</span>
+              <span className={`${textSecondary} text-sm`}>{t('host.diskUsage', 'Disk Usage')}</span>
             </div>
           </div>
           <div className={`text-3xl font-bold ${textPrimary} mb-2`}>{diskUsagePercent}%</div>
@@ -193,7 +195,7 @@ export const HostStatusView = memo(function HostStatusView({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Network className="w-5 h-5" style={{ color: networkInColor }} />
-              <span className={`${textSecondary} text-sm`}>Network I/O</span>
+              <span className={`${textSecondary} text-sm`}>{t('host.networkIo', 'Network I/O')}</span>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -263,7 +265,7 @@ export const HostStatusView = memo(function HostStatusView({
         <AppCard className={`${cardBg} h-full rounded-lg p-4 md:p-6 border ${cardBorder} ${cardShadow}`}>
           <h3 className={`text-base md:text-lg mb-3 md:mb-4 flex items-center gap-2 ${textPrimary}`}>
             <Cpu className="w-5 h-5" style={{ color: ODS_CHART_THEME.cpu }} />
-            CPU History
+            {t('host.cpuHistory', 'CPU History')}
           </h3>
           <ChartZoomArea
             onWheel={handleChartWheel}
@@ -343,7 +345,7 @@ export const HostStatusView = memo(function HostStatusView({
         <AppCard className={`${cardBg} h-full rounded-lg p-4 md:p-6 border ${cardBorder} ${cardShadow}`}>
           <h3 className={`text-base md:text-lg mb-3 md:mb-4 flex items-center gap-2 ${textPrimary}`}>
             <Activity className="w-5 h-5" style={{ color: ODS_CHART_THEME.ram }} />
-            RAM History
+            {t('host.ramHistory', 'RAM History')}
           </h3>
           <ChartZoomArea
             onWheel={handleChartWheel}
@@ -423,7 +425,7 @@ export const HostStatusView = memo(function HostStatusView({
         <AppCard className={`${cardBg} rounded-lg p-4 md:p-6 border ${cardBorder} ${cardShadow}`}>
           <h3 className={`text-base md:text-lg mb-3 md:mb-4 flex items-center gap-2 ${textPrimary}`}>
             <HardDrive className="w-5 h-5" style={{ color: ODS_CHART_THEME.disk }} />
-            Disk History
+            {t('host.diskHistory', 'Disk History')}
           </h3>
           <ChartZoomArea
             onWheel={handleChartWheel}
@@ -504,7 +506,7 @@ export const HostStatusView = memo(function HostStatusView({
           <div className="flex items-center justify-between mb-3 md:mb-4">
             <h3 className={`text-base md:text-lg flex items-center gap-2 ${textPrimary}`}>
               <Network className="w-5 h-5" style={{ color: networkInColor }} />
-              Network History
+              {t('host.networkHistory', 'Network History')}
             </h3>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1.5">
@@ -594,7 +596,7 @@ export const HostStatusView = memo(function HostStatusView({
                   stroke={networkHistoryInColor}
                   strokeWidth={ODS_CHART_THEME.lineWidthNetwork}
                   fill="url(#colorNetworkIn)"
-                  name="Incoming"
+                  name={t('host.incoming', 'Incoming')}
                   isAnimationActive={false}
                   dot={false}
                   connectNulls={false}
@@ -611,7 +613,7 @@ export const HostStatusView = memo(function HostStatusView({
                   stroke={networkHistoryOutColor}
                   strokeWidth={ODS_CHART_THEME.lineWidthNetwork}
                   fill="url(#colorNetworkOut)"
-                  name="Outgoing"
+                  name={t('host.outgoing', 'Outgoing')}
                   isAnimationActive={false}
                   dot={false}
                   connectNulls={false}
@@ -630,4 +632,3 @@ export const HostStatusView = memo(function HostStatusView({
     </div>
   );
 });
-
