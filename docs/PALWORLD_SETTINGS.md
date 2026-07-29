@@ -1,5 +1,7 @@
 # 🌎 Extended Palworld settings
 
+[English](PALWORLD_SETTINGS.md) · [Português (Brasil)](PALWORLD_SETTINGS.pt-BR.md)
+
 This fork expands the Palworld settings screen from a small curated form to a
 searchable interface generated from the game version installed on each server.
 It currently exposes 115 settings from Palworld's

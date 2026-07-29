@@ -1,25 +1,11 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { apiClient } from '../../utils/api';
 import { GameSettingsSection } from './GameSettingsSection';
 import { ServerEnvFieldsCard, type EnvFieldDef } from './ServerEnvFieldsCard';
 import { GameWipeTab } from './GameWipeTab';
 import { buildWipeModes } from './wipeModes';
-
-const ENV_FIELDS: EnvFieldDef[] = [
-  {
-    key: 'PALWORLD_ADMIN_PASSWORD',
-    label: 'Admin Password',
-    type: 'password',
-    description: "Used for in-game admin actions and the server's REST API.",
-  },
-  {
-    key: 'PALWORLD_UPDATE_ON_START',
-    label: 'Update on start',
-    type: 'toggle',
-    defaultValue: 'false',
-    description: 'When enabled, the server checks for and installs game updates via SteamCMD each time it starts.',
-  },
-];
+import { useLanguage } from '../../contexts/LanguageContext';
+import { localizePalworldSetting } from '../../utils/palworldSettingI18n';
 
 export interface PalworldSectionsProps {
   serverId: number;
@@ -60,6 +46,26 @@ export function PalworldSections({
   textPrimary,
   textSecondary,
 }: PalworldSectionsProps) {
+  const { locale, t } = useLanguage();
+  const localizeField = useCallback(
+    (field: import('./GameSettingsSection').GameSettingField) => localizePalworldSetting(field, locale),
+    [locale]
+  );
+  const envFields: EnvFieldDef[] = [
+    {
+      key: 'PALWORLD_ADMIN_PASSWORD',
+      label: t('palworld.adminPassword', 'Admin Password'),
+      type: 'password',
+      description: t('palworld.adminPasswordDescription', "Used for in-game admin actions and the server's REST API."),
+    },
+    {
+      key: 'PALWORLD_UPDATE_ON_START',
+      label: t('palworld.updateOnStart', 'Update on start'),
+      type: 'toggle',
+      defaultValue: 'false',
+      description: t('palworld.updateOnStartDescription', 'When enabled, the server checks for and installs game updates via SteamCMD each time it starts.'),
+    },
+  ];
   const showSettingsTab = canReadSettings || Boolean(canManageEnv);
   const showWipeTab = buildWipeModes('palworld', {
     canSoft: Boolean(canWipeSoft),
@@ -67,8 +73,8 @@ export function PalworldSections({
   }).length > 0;
 
   const tabs: { id: PalworldSubTab; label: string }[] = [
-    showSettingsTab && { id: 'settings', label: 'Server Settings' },
-    showWipeTab     && { id: 'wipe',     label: 'Wipe' },
+    showSettingsTab && { id: 'settings', label: t('palworld.serverSettings', 'Server Settings') },
+    showWipeTab     && { id: 'wipe',     label: t('palworld.wipe', 'Wipe') },
   ].filter(Boolean) as { id: PalworldSubTab; label: string }[];
 
   const firstTab = tabs[0]?.id ?? 'settings';
@@ -118,13 +124,14 @@ export function PalworldSections({
               contentBg={contentBg}
               textPrimary={textPrimary}
               textSecondary={textSecondary}
+              localizeField={localizeField}
             />
           )}
           {canManageEnv && (
             <ServerEnvFieldsCard
               serverId={serverId}
               serverStatus={serverStatus}
-              fields={ENV_FIELDS}
+              fields={envFields}
               canEdit={Boolean(canManageEnv && canEditContainerConfig)}
               containerConfigSaveCount={containerConfigSaveCount}
               borderColor={borderColor}

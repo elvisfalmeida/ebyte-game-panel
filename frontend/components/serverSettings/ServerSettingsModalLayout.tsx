@@ -6,6 +6,7 @@ import { useFocusTrap } from '../../src/ui/utils/useFocusTrap';
 import { useMediaQuery } from '../../src/ui/utils/useMediaQuery';
 import type { SettingsTab } from './access';
 import { ProviderLogo } from '../gameServersTable/ProviderBadge';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface ServerSettingsModalLayoutProps {
   isOpen: boolean;
@@ -58,6 +59,7 @@ export function ServerSettingsModalLayout({
   terminalContent,
   containerConfigContent,
 }: ServerSettingsModalLayoutProps) {
+  const { t } = useLanguage();
   const dialogRef = useRef<HTMLDivElement>(null);
   useBodyScrollLock(isOpen);
   useFocusTrap(isOpen, dialogRef, { onEscape: onClose });
@@ -79,7 +81,7 @@ export function ServerSettingsModalLayout({
       >
         <div className={`flex items-center justify-between p-3 md:p-4 border-b ${borderColor}`}>
           <div className="min-w-0 flex-1">
-            <h2 id="gp-server-settings-title" className={`text-base md:text-xl font-bold ${textPrimary} truncate`}>Server Settings</h2>
+            <h2 id="gp-server-settings-title" className={`text-base md:text-xl font-bold ${textPrimary} truncate`}>{t('settings.title', 'Server Settings')}</h2>
             <div className="flex items-center gap-2 min-w-0">
               <p className={`text-xs md:text-sm ${textSecondary} truncate`}>{serverName}</p>
               <ProviderLogo provider={serverProvider} height={18} />
@@ -104,7 +106,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn flex items-center gap-2 px-3 py-2 rounded text-sm whitespace-nowrap ${tabButtonClass('gameconfig')}`}
                 >
                   <Settings className="w-4 h-4" />
-                  <span>Config</span>
+                  <span>{t('settings.config', 'Config')}</span>
                 </AppButton>
               )}
                 <AppButton
@@ -114,7 +116,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn flex items-center gap-2 px-3 py-2 rounded text-sm whitespace-nowrap ${tabButtonClass('filemanager')}`}
                 >
                   <FolderOpen className="w-4 h-4" />
-                  <span>Files</span>
+                  <span>{t('settings.files', 'Files')}</span>
                 </AppButton>
                 {canShowBackupTab && (
                 <AppButton
@@ -124,7 +126,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn flex items-center gap-2 px-3 py-2 rounded text-sm whitespace-nowrap ${tabButtonClass('backup')}`}
                 >
                   <HardDrive className="w-4 h-4" />
-                  <span>Backups</span>
+                  <span>{t('settings.backups', 'Backups')}</span>
                 </AppButton>
                 )}
               {canShowScheduledTasksTab && (
@@ -135,7 +137,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn flex items-center gap-2 px-3 py-2 rounded text-sm whitespace-nowrap ${tabButtonClass('scheduledtasks')}`}
                 >
                   <Clock className="w-4 h-4" />
-                  <span>Schedules</span>
+                  <span>{t('settings.schedules', 'Schedules')}</span>
                 </AppButton>
               )}
                 <AppButton
@@ -145,7 +147,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn flex items-center gap-2 px-3 py-2 rounded text-sm whitespace-nowrap ${tabButtonClass('terminal')}`}
                 >
                   <Terminal className="w-4 h-4" />
-                  <span>Terminal</span>
+                  <span>{t('settings.terminal', 'Terminal')}</span>
                 </AppButton>
                 <AppButton
                   tone="ghost"
@@ -154,7 +156,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn flex items-center gap-2 px-3 py-2 rounded text-sm whitespace-nowrap ${tabButtonClass('containerconfig')}`}
                 >
                   <Container className="w-4 h-4" />
-                  <span>Container</span>
+                  <span>{t('settings.container', 'Container')}</span>
                 </AppButton>
             </nav>
           </div>
@@ -169,7 +171,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn w-full flex items-center gap-3 px-4 py-3 rounded ${tabButtonClass('gameconfig')}`}
                 >
                   <Settings className="w-5 h-5" />
-                  <span className="font-medium">Game Config</span>
+                  <span className="font-medium">{t('settings.gameConfig', 'Game Config')}</span>
                 </AppButton>
               )}
                 <AppButton
@@ -179,7 +181,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn w-full flex items-center gap-3 px-4 py-3 rounded ${tabButtonClass('filemanager')}`}
                 >
                   <FolderOpen className="w-5 h-5" />
-                  <span className="font-medium">File Manager</span>
+                  <span className="font-medium">{t('settings.fileManager', 'File Manager')}</span>
                 </AppButton>
                 {canShowBackupTab && (
                 <AppButton
@@ -189,7 +191,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn w-full flex items-center gap-3 px-4 py-3 rounded ${tabButtonClass('backup')}`}
                 >
                   <HardDrive className="w-5 h-5" />
-                  <span className="font-medium">Backups</span>
+                  <span className="font-medium">{t('settings.backups', 'Backups')}</span>
                 </AppButton>
                 )}
               {canShowScheduledTasksTab && (
@@ -200,7 +202,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn w-full flex items-center gap-3 px-4 py-3 rounded ${tabButtonClass('scheduledtasks')}`}
                 >
                   <Clock className="w-5 h-5" />
-                  <span className="font-medium">Scheduled Tasks</span>
+                  <span className="font-medium">{t('settings.scheduledTasks', 'Scheduled Tasks')}</span>
                 </AppButton>
               )}
                 <AppButton
@@ -210,7 +212,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn w-full flex items-center gap-3 px-4 py-3 rounded ${tabButtonClass('terminal')}`}
                 >
                   <Terminal className="w-5 h-5" />
-                  <span className="font-medium">Terminal</span>
+                  <span className="font-medium">{t('settings.terminal', 'Terminal')}</span>
                 </AppButton>
                 <AppButton
                   tone="ghost"
@@ -219,7 +221,7 @@ export function ServerSettingsModalLayout({
                   className={`gp-settings-menu-btn w-full flex items-center gap-3 px-4 py-3 rounded ${tabButtonClass('containerconfig')}`}
                 >
                   <Container className="w-5 h-5" />
-                  <span className="font-medium">Container Config</span>
+                  <span className="font-medium">{t('settings.containerConfig', 'Container Config')}</span>
                 </AppButton>
             </nav>
           </div>
@@ -229,9 +231,9 @@ export function ServerSettingsModalLayout({
             {!canAccessTab(activeTab) && (
               <div className="flex h-full items-center justify-center p-8 text-center">
                 <div>
-                  <p className={`text-sm font-medium ${textPrimary}`}>No access to this section</p>
+                  <p className={`text-sm font-medium ${textPrimary}`}>{t('settings.noAccess', 'No access to this section')}</p>
                   <p className={`mt-1 text-xs ${textSecondary}`}>
-                    You don't have permission to view or manage this part of the server's settings.
+                    {t('settings.noAccessDescription', "You don't have permission to view or manage this part of the server's settings.")}
                   </p>
                 </div>
               </div>
@@ -248,6 +250,5 @@ export function ServerSettingsModalLayout({
     </div>
   );
 }
-
 
 

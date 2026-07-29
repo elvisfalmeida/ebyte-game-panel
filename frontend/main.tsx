@@ -9,12 +9,15 @@ import '@ovhcloud/ods-themes/default/fonts';
 import './src/ui/theme/ods-dark.css';
 import './src/ui/theme/ods-light.css';
 import './styles/globals.css';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <RealtimeStatusBanner />
-      <App />
+      <LanguageProvider>
+        <RealtimeStatusBanner />
+        <App />
+      </LanguageProvider>
     </ErrorBoundary>
   </React.StrictMode>
 );
