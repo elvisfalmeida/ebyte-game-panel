@@ -17,6 +17,7 @@ import { PanelUpdateModal } from './PanelUpdateModal';
 import { apiClient, type PanelUpdateCheck } from '../utils/api';
 import { useBodyScrollLock } from '../src/ui/utils/useBodyScrollLock';
 import { useLanguage } from '../contexts/LanguageContext';
+import { PANEL_LOGO_URL, PANEL_NAME } from '../utils/branding';
 
 interface SidebarProps {
   activeTab: string;
@@ -210,10 +211,10 @@ export function Sidebar({
       <div className={`border-b px-4 py-3 ${isDark ? 'border-white/10' : 'border-white/40'}`}>
         <div className="flex items-center justify-center">
           <img
-            src="/OVHcloud_Game_Panel_Logo.png"
-            alt="OVHcloud Game Panel"
+            src={PANEL_LOGO_URL}
+            alt={PANEL_NAME}
             draggable={false}
-            className="h-10 w-auto object-contain brightness-0 invert cursor-pointer select-none"
+            className="h-12 w-12 object-contain cursor-pointer select-none"
             onClick={() => {
               const next = logoClickCount + 1;
               if (next >= 5) {
@@ -224,6 +225,7 @@ export function Sidebar({
               }
             }}
           />
+          <span className="ml-2 text-sm font-bold leading-tight text-white">{PANEL_NAME}</span>
         </div>
       </div>
 

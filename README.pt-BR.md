@@ -2,14 +2,14 @@
 
 [English](README.md) · [Português (Brasil)](README.pt-BR.md)
 
-# 🎮 OVHcloud Game Panel
+# 🎮 Ebyte Game Panel
 
 ### Implante e administre seus servidores de jogos em uma interface web moderna.
 
 [![Licença](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 ![Plataforma](https://img.shields.io/badge/Platform-Linux-1793D1)
 
-<img src="docs/assets/game-panel.png" alt="OVHcloud Game Panel" width="900">
+<img src="frontend/public/ebyte-logo.png" alt="Ebyte Game Panel" width="220">
 
 </div>
 
@@ -90,6 +90,7 @@ Inglês é sempre usado como fallback quando uma tradução ainda não existe.
 
 - [Configurações ampliadas do Palworld](docs/PALWORLD_SETTINGS.pt-BR.md)
 - [Telemetria](docs/TELEMETRY.pt-BR.md)
+- [Personalização de marca](docs/BRANDING.pt-BR.md)
 - [Changelog em português](CHANGELOG.pt-BR.md)
 
 ## 📄 Licença

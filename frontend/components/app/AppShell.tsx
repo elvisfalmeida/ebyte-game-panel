@@ -30,6 +30,7 @@ import type {
 import { nextId } from '../../utils/uid';
 import type { ActiveLogPromptToast, ConsoleTerminalTarget } from './appRuntime';
 import { AppButton } from '../../src/ui/components';
+import { PANEL_LOGO_URL, PANEL_NAME } from '../../utils/branding';
 
 interface AppShellProps {
   activeTab: string;
@@ -208,10 +209,10 @@ export function AppShell({
             <Menu className={`w-6 h-6 ${isDark ? 'text-white' : 'text-white'}`} />
           </AppButton>
           <img
-            src="/OVHcloud_Game_Panel_Logo.png"
-            alt="OVHcloud Game Panel"
+            src={PANEL_LOGO_URL}
+            alt={PANEL_NAME}
             draggable={false}
-            className="h-8 w-auto max-w-[70%] object-contain brightness-0 invert select-none"
+            className="h-10 w-10 object-contain select-none"
           />
           <div className="w-10"></div>
         </div>
@@ -363,5 +364,4 @@ export function AppShell({
     </div>
   );
 }
-
 

@@ -10,6 +10,9 @@ import './src/ui/theme/ods-dark.css';
 import './src/ui/theme/ods-light.css';
 import './styles/globals.css';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { applyPanelBranding } from './utils/branding';
+
+applyPanelBranding();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
