@@ -12,6 +12,7 @@ import {
     resolvePalworldBackupLocation,
     restorePalworldBackup,
 } from '../images/palworld/backups.js';
+import { resolvePalworldSoftWipeTargets } from '../images/palworld/wipe.js';
 import palworldRoutes from '../images/palworld/routes.js';
 import { OVHCLOUD_DOCKER_STOP_TIMEOUT_SECONDS } from './common.js';
 import type { OvhcloudImageAdapter, OvhcloudInstallResolution } from './types.js';
@@ -25,6 +26,10 @@ export const palworldAdapter: OvhcloudImageAdapter = {
         script: '/app/send-command.sh',
         user: 'gameserver',
         workdir: '/app',
+    },
+    wipe: {
+        soft: resolvePalworldSoftWipeTargets,
+        hard: true,
     },
     backup: {
         kind: 'directory',

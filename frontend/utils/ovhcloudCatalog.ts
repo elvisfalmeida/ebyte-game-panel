@@ -8,7 +8,7 @@ export interface OvhcloudPort {
 export interface OvhcloudImage {
   imageId: string;
   name: string;
-  family: 'minecraft' | 'counter-strike' | 'hytale' | 'palworld';
+  family: 'minecraft' | 'counter-strike' | 'hytale' | 'palworld' | 'project-zomboid';
   dockerImage: string;
   defaultTcpPorts: OvhcloudPort[];
   defaultUdpPorts: OvhcloudPort[];
@@ -27,7 +27,6 @@ function ovhImage(name: string): string {
 const MINECRAFT_COMMON_ENV: Record<string, string> = {
   EULA: 'FALSE',
   MC_VERSION: 'latest',
-  JAVA_XMX: '6G',
 };
 
 const MINECRAFT_TCP: OvhcloudPort[] = [{ port: 25565, label: 'Game' }];
@@ -59,7 +58,7 @@ function mcNeoForge(imageId: string, name: string): OvhcloudImage {
     dockerImage: ovhImage(`gamepanel-${imageId}`),
     defaultTcpPorts: MINECRAFT_TCP,
     defaultUdpPorts: [],
-    defaultEnv: { EULA: 'FALSE', NEOFORGE_VERSION: 'latest', JAVA_XMX: '6G' },
+    defaultEnv: { EULA: 'FALSE', NEOFORGE_VERSION: 'latest' },
     requiredEnvKeys: ['EULA', 'NEOFORGE_VERSION'],
     supportsHytaleOptions: false,
   };
@@ -148,7 +147,7 @@ export const OVHCLOUD_IMAGES: OvhcloudImage[] = [
     dockerImage: ovhImage('gamepanel-hytale-java25'),
     defaultTcpPorts: [],
     defaultUdpPorts: [{ port: 5520, label: 'Game' }],
-    defaultEnv: { JAVA_XMX: '6G' },
+    defaultEnv: {},
     requiredEnvKeys: [],
     supportsHytaleOptions: true,
   },
@@ -165,6 +164,23 @@ export const OVHCLOUD_IMAGES: OvhcloudImage[] = [
       { port: 27015, label: 'Steam Query' },
     ],
     defaultEnv: { PALWORLD_UPDATE_ON_START: 'false' },
+    requiredEnvKeys: [],
+    supportsHytaleOptions: false,
+  },
+
+
+  // --- Project Zomboid ---
+  {
+    imageId: 'project-zomboid',
+    name: 'Project Zomboid',
+    family: 'project-zomboid',
+    dockerImage: ovhImage('gamepanel-project-zomboid'),
+    defaultTcpPorts: [],
+    defaultUdpPorts: [
+      { port: 16261, label: 'Game' },
+      { port: 16262, label: 'Direct Connect' },
+    ],
+    defaultEnv: { PZ_UPDATE_ON_START: 'false' },
     requiredEnvKeys: [],
     supportsHytaleOptions: false,
   },

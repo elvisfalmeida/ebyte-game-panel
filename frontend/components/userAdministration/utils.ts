@@ -43,7 +43,14 @@ export const BACKUP_OPTIONS = [
   { value: 'backups.settings.write', label: 'Edit backup settings' },
 ];
 
-export const SERVER_OPTIONS = [...SERVER_CORE_OPTIONS, ...BACKUP_OPTIONS];
+// Generic wipe permissions (all OVHcloud games). The role UI shows only the modes
+// a given game supports; the permission strings themselves are game-agnostic.
+export const WIPE_OPTIONS = [
+  { value: 'server.wipe.soft', label: 'Soft wipe' },
+  { value: 'server.wipe.hard', label: 'Hard wipe' },
+];
+
+export const SERVER_OPTIONS = [...SERVER_CORE_OPTIONS, ...BACKUP_OPTIONS, ...WIPE_OPTIONS];
 
 export const CS2_OVHCLOUD_OPTIONS = [
   { value: 'cs2.frameworks.write', label: 'Manage frameworks' },
@@ -76,6 +83,13 @@ export const PALWORLD_OVHCLOUD_OPTIONS = [
   { value: 'palworld.settings.write', label: 'Edit game config' },
 ];
 
+export const PROJECT_ZOMBOID_OVHCLOUD_OPTIONS = [
+  { value: 'project-zomboid.settings.read', label: 'View game config' },
+  { value: 'project-zomboid.settings.write', label: 'Edit game config' },
+  { value: 'project-zomboid.mods.read', label: 'View mods' },
+  { value: 'project-zomboid.mods.write', label: 'Manage mods' },
+];
+
 // Per-server permissions the backend accepts for a member; must not contain the `*` wildcard.
 export const ASSIGNABLE_SERVER_PERMISSIONS: string[] = [
   ...SERVER_OPTIONS,
@@ -83,6 +97,7 @@ export const ASSIGNABLE_SERVER_PERMISSIONS: string[] = [
   ...MINECRAFT_OVHCLOUD_OPTIONS,
   ...HYTALE_OVHCLOUD_OPTIONS,
   ...PALWORLD_OVHCLOUD_OPTIONS,
+  ...PROJECT_ZOMBOID_OVHCLOUD_OPTIONS,
 ].map((option) => option.value);
 
 export const SERVER_PRESETS = [
@@ -194,6 +209,26 @@ export const PALWORLD_PRESETS = [
   },
 ];
 
+export const PROJECT_ZOMBOID_PRESETS = [
+  {
+    id: 'project-zomboid-viewer',
+    label: 'Project Zomboid Viewer',
+    permissions: [
+      ...BASE_VIEWER,
+      'project-zomboid.settings.read', 'project-zomboid.mods.read',
+    ],
+  },
+  {
+    id: 'project-zomboid-operator',
+    label: 'Project Zomboid Operator',
+    permissions: [
+      ...BASE_OPERATOR,
+      'project-zomboid.settings.read', 'project-zomboid.settings.write',
+      'project-zomboid.mods.read', 'project-zomboid.mods.write',
+    ],
+  },
+];
+
 export const CS2_PRESETS = [
   {
     id: 'cs2-operator',
@@ -206,7 +241,7 @@ export const CS2_PRESETS = [
   },
 ];
 
-export const ALL_PRESETS = [...SERVER_PRESETS, ...MINECRAFT_PRESETS, ...HYTALE_PRESETS, ...PALWORLD_PRESETS, ...CS2_PRESETS];
+export const ALL_PRESETS = [...SERVER_PRESETS, ...MINECRAFT_PRESETS, ...HYTALE_PRESETS, ...PALWORLD_PRESETS, ...PROJECT_ZOMBOID_PRESETS, ...CS2_PRESETS];
 
 export const MAX_USERS = 10;
 
@@ -217,6 +252,7 @@ export const serverPresetValues = new Set([
   ...MINECRAFT_OVHCLOUD_OPTIONS.map((option) => option.value),
   ...HYTALE_OVHCLOUD_OPTIONS.map((option) => option.value),
   ...PALWORLD_OVHCLOUD_OPTIONS.map((option) => option.value),
+  ...PROJECT_ZOMBOID_OVHCLOUD_OPTIONS.map((option) => option.value),
   '*',
 ]);
 export function parsePermissionList(value: string): string[] {

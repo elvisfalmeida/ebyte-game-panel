@@ -14,7 +14,7 @@ import {
   AppModalTitle,
 } from '../src/ui/components';
 import { PanelUpdateModal } from './PanelUpdateModal';
-import { apiClient } from '../utils/api';
+import { apiClient, type PanelUpdateCheck } from '../utils/api';
 import { useBodyScrollLock } from '../src/ui/utils/useBodyScrollLock';
 
 interface SidebarProps {
@@ -177,11 +177,7 @@ export function Sidebar({
   useBodyScrollLock(isLegalModalOpen || isEasterEggOpen);
   const [logoClickCount, setLogoClickCount] = useState(0);
   const [isPanelUpdateOpen, setIsPanelUpdateOpen] = useState(false);
-  const [updateInfo, setUpdateInfo] = useState<{
-    currentVersion: string;
-    latestVersion: string | null;
-    updateAvailable: boolean;
-  } | null>(null);
+  const [updateInfo, setUpdateInfo] = useState<PanelUpdateCheck | null>(null);
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === 'dark';
   const layoutClasses = staticLayout ? 'relative h-full' : 'fixed left-0 top-0 h-screen';

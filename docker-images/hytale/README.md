@@ -39,7 +39,7 @@ Boolean inputs accept `true` / `false` (and `1`, `yes`, `on` / `0`, `no`, `off`)
 | --- | --- | --- | --- |
 | `HYTALE_VERSION` | *(from prepared files)* | version string | Hytale server version used for runtime metadata. |
 | `JAVA_XMS` | *(unset)* | e.g. `2G`, `2048M` | Initial JVM heap size. |
-| `JAVA_XMX` | *(unset)* | e.g. `4G`, `4096M` | Maximum JVM heap size. |
+| `JAVA_XMX` | *(auto: 75% of RAM)* | e.g. `4G`, `4096M` | Maximum JVM heap size. When unset, the server runs with `-XX:MaxRAMPercentage=75`, i.e. ~75% of the container's memory limit (or of host RAM if no limit is set). |
 | `HYTALE_START_PARAMS` | *(empty)* | any launch args | Extra launch arguments passed to the server. |
 | `HEALTHCHECK_PORT` | `5520` | `1024`–`65535` | UDP game port the health check expects the server to bind. |
 | `HEALTHCHECK_REQUIRE_BIND` | `true` | boolean | Require the UDP game port to be bound for the container to be healthy. |

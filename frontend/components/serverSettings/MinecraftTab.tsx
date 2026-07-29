@@ -4,6 +4,8 @@ import { AppButton } from '../../src/ui/components';
 import { apiClient } from '../../utils/api';
 import { GameSettingsSection } from './GameSettingsSection';
 import { ModsSection } from './ModsSection';
+import { GameWipeTab } from './GameWipeTab';
+import { buildWipeModes } from './wipeModes';
 import { MinecraftVersionPicker } from '../MinecraftVersionPicker';
 import { getPickerManagedKeys, type McServerType } from '../../utils/minecraftCatalog';
 
@@ -30,6 +32,9 @@ export interface MinecraftSectionsProps {
   canWriteIpBans: boolean;
   canReadAddons: boolean;
   canWriteAddons: boolean;
+  canWipeSoft?: boolean;
+  canWipeHard?: boolean;
+  onReinstallStarted?: () => void;
   addonKind: 'plugins' | 'mods';
   borderColor: string;
   contentBg: string;
@@ -775,7 +780,7 @@ function ServerVersionSection({
 
 // ── MinecraftSections (embeddable, horizontal sub-tabs) ───────────────────
 
-type MinecraftSubTab = 'settings' | 'operators' | 'whitelist' | 'bans' | 'ipbans' | 'addons';
+type MinecraftSubTab = 'settings' | 'operators' | 'whitelist' | 'bans' | 'ipbans' | 'addons' | 'wipe';
 
 export function MinecraftSections({
   serverId,
@@ -793,6 +798,9 @@ export function MinecraftSections({
   canWriteIpBans,
   canReadAddons,
   canWriteAddons,
+  canWipeSoft,
+  canWipeHard,
+  onReinstallStarted,
   addonKind,
   borderColor,
   contentBg,
@@ -808,6 +816,11 @@ export function MinecraftSections({
   // The version picker is env-backed, so it needs `server.env`.
   const canShowVersion = !!mcServerType && canManageEnv;
 
+  const showWipeTab = buildWipeModes('minecraft', {
+    canSoft: Boolean(canWipeSoft),
+    canHard: Boolean(canWipeHard),
+  }).length > 0;
+
   const tabs: { id: MinecraftSubTab; label: string }[] = [
     (canReadSettings || canShowVersion) && { id: 'settings', label: 'Server Settings' },
     canReadAddons     && { id: 'addons',     label: addonLabel },
@@ -815,6 +828,7 @@ export function MinecraftSections({
     canReadWhitelist  && { id: 'whitelist',  label: 'Whitelist' },
     canReadBans       && { id: 'bans',       label: 'Player Bans' },
     canReadIpBans     && { id: 'ipbans',     label: 'IP Bans' },
+    showWipeTab       && { id: 'wipe',       label: 'Wipe' },
   ].filter(Boolean) as { id: MinecraftSubTab; label: string }[];
 
   const firstTab = tabs[0]?.id ?? 'settings';
@@ -900,10 +914,27 @@ export function MinecraftSections({
         <div className={activeTab !== 'addons' ? 'hidden' : ''}>
           <ModsSection
             serverId={serverId}
+            serverStatus={serverStatus}
             kind={addonKind}
             apiKind="minecraft"
             canRead={canReadAddons}
             canWrite={canWriteAddons}
+            borderColor={borderColor}
+            contentBg={contentBg}
+            textPrimary={textPrimary}
+            textSecondary={textSecondary}
+          />
+        </div>
+      )}
+      {visited.has('wipe') && showWipeTab && (
+        <div className={activeTab !== 'wipe' ? 'hidden' : ''}>
+          <GameWipeTab
+            family="minecraft"
+            serverId={serverId}
+            serverStatus={serverStatus}
+            canWipeSoft={Boolean(canWipeSoft)}
+            canWipeHard={Boolean(canWipeHard)}
+            onReinstallStarted={onReinstallStarted}
             borderColor={borderColor}
             contentBg={contentBg}
             textPrimary={textPrimary}

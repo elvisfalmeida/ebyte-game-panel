@@ -24,6 +24,7 @@ import { useBackupState } from './serverSettings/useBackupState';
 import { useBodyScrollLock } from '../src/ui/utils/useBodyScrollLock';
 import { useFileManagerState } from './serverSettings/useFileManagerState';
 import { apiClient } from '../utils/api';
+import { retryWithBackoff, runWithConcurrency } from '../utils/uploadHelpers';
 import type { AuthUser } from '../utils/permissions';
 import {
   createBackupNowHandler,
@@ -79,6 +80,7 @@ export function ServerSettingsModal({
   })();
   const isHytaleOvhcloud = ovhcloudFamily === 'hytale';
   const isPalworldOvhcloud = ovhcloudFamily === 'palworld';
+  const isProjectZomboidOvhcloud = ovhcloudFamily === 'project-zomboid';
   const isCS2Ovhcloud = (() => {
     if (serverProvider !== 'ovhcloud') return false;
     try {
@@ -129,8 +131,9 @@ export function ServerSettingsModal({
     if (isMinecraftJavaOvhcloud) return ['/server.properties'];
     if (isHytaleOvhcloud) return ['/game/Server/config.json'];
     if (isPalworldOvhcloud) return ['/server/Pal/Saved/Config/LinuxServer/PalWorldSettings.ini'];
+    if (isProjectZomboidOvhcloud) return ['/zomboid/Server/servertest.ini', '/zomboid/Server/servertest_SandboxVars.lua'];
     return undefined;
-  }, [isMinecraftJavaOvhcloud, isHytaleOvhcloud, isPalworldOvhcloud]);
+  }, [isMinecraftJavaOvhcloud, isHytaleOvhcloud, isPalworldOvhcloud, isProjectZomboidOvhcloud]);
 
   const serverBackupSupported = (() => {
     if (serverProvider === 'linuxgsm') return true;
@@ -292,6 +295,13 @@ export function ServerSettingsModal({
     canReadPalworldSettings,
     canWritePalworldSettings,
     canUsePalworld,
+    canReadProjectZomboidSettings,
+    canWriteProjectZomboidSettings,
+    canReadProjectZomboidMods,
+    canWriteProjectZomboidMods,
+    canUseProjectZomboid,
+    canWipeSoft,
+    canWipeHard,
     canWriteCS2Frameworks,
     canAccessTab: baseCanAccessTab,
   } = createServerSettingsAccess(currentUser, serverPermissions);
@@ -304,6 +314,7 @@ export function ServerSettingsModal({
       isMinecraftBedrockOvhcloud ||
       isHytaleOvhcloud ||
       isPalworldOvhcloud ||
+      isProjectZomboidOvhcloud ||
       isCS2Ovhcloud ||
       isLinuxGSMGame);
 
@@ -313,7 +324,8 @@ export function ServerSettingsModal({
     ((isMinecraftJavaOvhcloud || isMinecraftBedrockOvhcloud) && canUseMinecraft) ||
     (isHytaleOvhcloud && canUseHytale) ||
     (isPalworldOvhcloud && canUsePalworld) ||
-    (isCS2Ovhcloud && canEditContainerConfig) ||
+    (isProjectZomboidOvhcloud && canUseProjectZomboid) ||
+    (isCS2Ovhcloud && (canEditContainerConfig || canWipeHard)) ||
     (isLinuxGSMGame && canUseFileManager);
 
   const canUseGameConfigTab = gameConfigApplicable;
@@ -449,9 +461,69 @@ export function ServerSettingsModal({
   });
 
   const [uploadQueue, setUploadQueue] = useState<UploadQueueItem[]>([]);
+  // Mirror of the queue for imperative reads (retry) without stale closures.
+  const uploadQueueRef = useRef<UploadQueueItem[]>([]);
+  useEffect(() => { uploadQueueRef.current = uploadQueue; }, [uploadQueue]);
+  // Per-queue-item task, so a failed item can be retried with the same file and
+  // destination without the user re-dragging the whole folder.
+  const uploadTasksRef = useRef<Map<string, { file: File; relativePath: string; dirPath: string; root?: string }>>(new Map());
+
+  // A folder upload (e.g. a Minecraft map) is often hundreds of small files.
+  // Uploading them all at once saturates the browser's ~6-connections-per-host
+  // limit and the server; bound concurrency to a handful at a time instead.
+  const UPLOAD_CONCURRENCY = 5;
+
+  // Upload one queued item (by queue id): reset it to in-progress, retry transient
+  // failures, and reflect the final state. Returns whether it ultimately succeeded.
+  const uploadOneQueued = useCallback(
+    async (queueId: string): Promise<boolean> => {
+      const task = uploadTasksRef.current.get(queueId);
+      if (!serverId || !task) return true;
+      setUploadQueue((prev) =>
+        prev.map((it) => (it.id === queueId ? { ...it, progress: 0, done: false, error: undefined } : it))
+      );
+      try {
+        await retryWithBackoff(() =>
+          apiClient.uploadServerFile(serverId, task.dirPath, task.relativePath, task.file, (pct) => {
+            setUploadQueue((prev) => prev.map((it) => (it.id === queueId ? { ...it, progress: pct } : it)));
+          }, task.root)
+        );
+        setUploadQueue((prev) =>
+          prev.map((it) => (it.id === queueId ? { ...it, progress: 100, done: true, error: undefined } : it))
+        );
+        return true;
+      } catch (error: any) {
+        const msg = error?.response?.data?.error || error?.message || 'Upload failed';
+        setUploadQueue((prev) => prev.map((it) => (it.id === queueId ? { ...it, error: msg, done: true } : it)));
+        return false;
+      }
+    },
+    [serverId]
+  );
+
+  // Only auto-purge the queue when everything succeeded; if anything failed, keep
+  // the entries visible so the user sees the recap and can retry the failures.
+  const purgeQueueIfAllSucceeded = useCallback(() => {
+    setTimeout(() => {
+      setUploadQueue((prev) => {
+        if (prev.some((it) => it.error)) return prev;
+        for (const it of prev) if (it.done && !it.error) uploadTasksRef.current.delete(it.id);
+        return prev.filter((it) => !it.done || !!it.error);
+      });
+    }, 3000);
+  }, []);
+
+  const runUploads = useCallback(
+    async (queueIds: string[]) => {
+      await runWithConcurrency(queueIds, UPLOAD_CONCURRENCY, async (id) => { await uploadOneQueued(id); });
+      loadFiles(currentPath);
+      purgeQueueIfAllSucceeded();
+    },
+    [uploadOneQueued, loadFiles, currentPath, purgeQueueIfAllSucceeded]
+  );
 
   const handleUploadFiles = useCallback(
-    async (files: File[]) => {
+    async (dropped: File[]) => {
       if (!serverId || !canWriteFiles) return;
 
       // Preserve each file's folder-relative path (react-dropzone puts it on `file.path`)
@@ -466,49 +538,91 @@ export function ServerSettingsModal({
       };
 
       const dirPath = currentPath.replace(/\/$/, '');
-      const uploads = files.map((file) => ({ file, relativePath: relativePathOf(file) }));
+      const uploads = dropped.map((file) => ({ file, relativePath: relativePathOf(file) }));
 
-      const newItems: UploadQueueItem[] = uploads.map(({ relativePath }) => ({
-        id: `${relativePath}-${Date.now()}-${Math.random()}`,
-        name: relativePath,
-        progress: 0,
-        done: false,
-      }));
-      setUploadQueue((prev) => [...prev, ...newItems]);
+      const runNow = async () => {
+        const newItems: UploadQueueItem[] = uploads.map(({ relativePath }) => ({
+          id: `${relativePath}-${Date.now()}-${Math.random()}`,
+          name: relativePath,
+          progress: 0,
+          done: false,
+        }));
+        uploads.forEach(({ file, relativePath }, i) => {
+          uploadTasksRef.current.set(newItems[i].id, { file, relativePath, dirPath, root: currentRoot });
+        });
+        setUploadQueue((prev) => [...prev, ...newItems]);
+        await runUploads(newItems.map((it) => it.id));
+      };
 
-      await Promise.all(
-        uploads.map(async ({ file, relativePath }, i) => {
-          const queueId = newItems[i].id;
-          try {
-            await apiClient.uploadServerFile(serverId, dirPath, relativePath, file, (pct) => {
-              setUploadQueue((prev) =>
-                prev.map((item) => (item.id === queueId ? { ...item, progress: pct } : item))
-              );
-            }, currentRoot);
-            setUploadQueue((prev) =>
-              prev.map((item) =>
-                item.id === queueId ? { ...item, progress: 100, done: true } : item
-              )
-            );
-          } catch (error: any) {
-            const msg = error?.response?.data?.error || error?.message || 'Upload failed';
-            setUploadQueue((prev) =>
-              prev.map((item) =>
-                item.id === queueId ? { ...item, error: msg, done: true } : item
-              )
-            );
-          }
-        })
+      // Warn before overwriting: collide the uploads' top-level name against the
+      // current directory listing (covers a file, or a folder of the same name).
+      const existing = new Set(files.map((f) => f.name));
+      const clashes = Array.from(
+        new Set(uploads.map((u) => u.relativePath.split('/')[0]).filter((name) => existing.has(name)))
       );
 
-      loadFiles(currentPath);
+      if (clashes.length > 0) {
+        requestConfirm(
+          'Replace existing items?',
+          `${clashes.length === 1 ? 'This item' : 'These items'} already exist here and will be overwritten: ${clashes.join(', ')}.`,
+          runNow,
+          'warning'
+        );
+        return;
+      }
 
-      setTimeout(() => {
-        setUploadQueue((prev) => prev.filter((item) => !item.done || !!item.error));
-      }, 3000);
+      await runNow();
     },
-[serverId, canWriteFiles, currentPath, currentRoot, loadFiles]
+    [serverId, canWriteFiles, currentPath, currentRoot, runUploads, files]
   );
+
+  const handleRetryFailedUploads = useCallback(async () => {
+    const failedIds = uploadQueueRef.current.filter((it) => !!it.error).map((it) => it.id);
+    if (failedIds.length === 0) return;
+    await runUploads(failedIds);
+  }, [runUploads]);
+
+  // Server-side archive extraction: trigger the job, then poll it (no client-side
+  // progress — the work is on the server). One extraction at a time.
+  const [extractStatus, setExtractStatus] = useState<
+    { name: string; status: 'running' | 'done' | 'failed'; completedFiles: number; error?: string } | null
+  >(null);
+  const extractingRef = useRef(false);
+
+  const handleExtractFile = useCallback(async (fileName: string) => {
+    if (!serverId || !canWriteFiles || extractingRef.current) return;
+    extractingRef.current = true;
+    const dirPath = currentPath.replace(/\/$/, '');
+    const path = `${dirPath}/${fileName}`;
+    setExtractStatus({ name: fileName, status: 'running', completedFiles: 0 });
+    try {
+      const job = await apiClient.extractServerArchive(serverId, path, currentRoot);
+      let current = job;
+      let pollErrors = 0;
+      while (current.status === 'pending' || current.status === 'running') {
+        setExtractStatus({ name: fileName, status: 'running', completedFiles: current.completedFiles });
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        try {
+          current = await apiClient.getFileTransfer(serverId, job.id);
+          pollErrors = 0;
+        } catch (err) {
+          if (++pollErrors >= 5) throw err;
+        }
+      }
+      if (current.status === 'completed') {
+        setExtractStatus({ name: fileName, status: 'done', completedFiles: current.completedFiles });
+        loadFiles(currentPath);
+        setTimeout(() => setExtractStatus((s) => (s && s.status === 'done' ? null : s)), 3000);
+      } else {
+        setExtractStatus({ name: fileName, status: 'failed', completedFiles: current.completedFiles, error: current.errorMessage || 'Extraction failed' });
+      }
+    } catch (error: any) {
+      const msg = error?.response?.data?.error || error?.message || 'Extraction failed';
+      setExtractStatus({ name: fileName, status: 'failed', completedFiles: 0, error: msg });
+    } finally {
+      extractingRef.current = false;
+    }
+  }, [serverId, canWriteFiles, currentPath, currentRoot, loadFiles]);
 
   const handleCopyPath = createCopyPathHandler({
     currentPath,
@@ -693,6 +807,9 @@ export function ServerSettingsModal({
             copyContentSuccess={copyContentSuccess}
             onUploadFiles={handleUploadFiles}
             uploadQueue={uploadQueue}
+            onRetryFailedUploads={handleRetryFailedUploads}
+            onExtractFile={handleExtractFile}
+            extractStatus={extractStatus}
           />
         }
         backupContent={
@@ -764,6 +881,9 @@ export function ServerSettingsModal({
               canWriteIpBans: isMinecraftJavaOvhcloud && canWriteMinecraftIpBans,
               canReadAddons: isMinecraftJavaOvhcloud && minecraftAddonsSupported && canReadMinecraftAddons,
               canWriteAddons: isMinecraftJavaOvhcloud && minecraftAddonsSupported && canWriteMinecraftAddons,
+              canWipeSoft,
+              canWipeHard,
+              onReinstallStarted: onClose,
               addonKind,
               borderColor,
               contentBg,
@@ -781,6 +901,9 @@ export function ServerSettingsModal({
               canWriteSettings: canWriteHytaleSettings,
               canReadMods: canReadHytaleMods,
               canWriteMods: canWriteHytaleMods,
+              canWipeSoft,
+              canWipeHard,
+              onReinstallStarted: onClose,
               borderColor,
               contentBg,
               textPrimary,
@@ -791,6 +914,9 @@ export function ServerSettingsModal({
               serverStatus,
               canReadSettings: canReadPalworldSettings,
               canWriteSettings: canWritePalworldSettings,
+              canWipeSoft,
+              canWipeHard,
+              onReinstallStarted: onClose,
               canManageEnv,
               canEditContainerConfig,
               containerConfigSaveCount,
@@ -799,11 +925,32 @@ export function ServerSettingsModal({
               textPrimary,
               textSecondary,
             } : null}
-            cs2Props={isCS2Ovhcloud && serverId && canEditContainerConfig ? {
+            projectZomboidProps={isProjectZomboidOvhcloud && serverId && canUseProjectZomboid ? {
+              serverId,
+              serverStatus,
+              canReadSettings: canReadProjectZomboidSettings,
+              canWriteSettings: canWriteProjectZomboidSettings,
+              canReadMods: canReadProjectZomboidMods,
+              canWriteMods: canWriteProjectZomboidMods,
+              canWipeSoft,
+              canWipeHard,
+              onReinstallStarted: onClose,
+              canManageEnv,
+              canEditContainerConfig,
+              containerConfigSaveCount,
+              borderColor,
+              contentBg,
+              textPrimary,
+              textSecondary,
+            } : null}
+            cs2Props={isCS2Ovhcloud && serverId && (canEditContainerConfig || canWipeHard) ? {
               serverId,
               serverStatus,
               canEdit: canEditContainerConfig,
               canWriteFrameworks: canWriteCS2Frameworks,
+              canWipeSoft,
+              canWipeHard,
+              onReinstallStarted: onClose,
               canManageEnv,
               borderColor,
               contentBg,

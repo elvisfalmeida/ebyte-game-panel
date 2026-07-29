@@ -2,7 +2,9 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 import type {
   ReleaseConfigFileDefinition,
 } from './api/types';
+import type { ProjectZomboidMod, ProjectZomboidModId, ProjectZomboidWorkshopPreview } from '../types/projectZomboid';
 import { getFilenameFromDisposition, getPathFilename } from './api/helpers';
+import { retryWithBackoff } from './uploadHelpers';
 import { RealtimeGateway, type RealtimeConnectionStatus } from './api/realtimeGateway';
 import {
   API_BASE_URL,
@@ -24,6 +26,37 @@ export type { RealtimeConnectionStatus } from './api/realtimeGateway';
 // Long-running install/upload/restore/download calls opt into the extended timeout per-request.
 const DEFAULT_TIMEOUT_MS = 60_000;
 const LONG_TIMEOUT_MS = 30 * 60 * 1000;
+
+// Release notes for a panel version (best-effort: any field may be null).
+export interface ReleaseNotes {
+  version: string;
+  name: string | null;
+  body: string | null;       // CHANGELOG in markdown
+  htmlUrl: string | null;
+  publishedAt: string | null;
+  prerelease: boolean;
+}
+
+export interface PanelUpdateCheck {
+  currentVersion: string;
+  latestVersion: string | null;
+  updateAvailable: boolean;
+  currentRelease: ReleaseNotes | null;   // notes of the installed version
+  newerReleases: ReleaseNotes[];         // newer versions, most-recent first ([] if up to date)
+}
+
+// Background File Manager job (currently: archive extraction). totalBytes/totalFiles
+// are 0 (decompressed size is unknown up front), so progress is an activity count.
+export interface FileTransferJob {
+  id: number;
+  kind: string;
+  status: 'pending' | 'running' | 'completed' | 'failed';
+  root: string;
+  basePath: string;
+  completedFiles: number;
+  transferredBytes: number;
+  errorMessage: string | null;
+}
 
 class ApiClient {
   private client: AxiosInstance;
@@ -717,6 +750,22 @@ class ApiClient {
     return response.data;
   }
 
+  // Extract an archive (.zip/.tar.gz/.tgz/.tar) server-side into its own folder.
+  // Runs as a background job; poll getFileTransfer until completed/failed. We only
+  // send { root, path } and leave overwrite/deleteArchive/dest at the backend defaults.
+  async extractServerArchive(serverId: number, path: string, root?: string) {
+    const response = await this.client.post(`/api/servers/${serverId}/files/extract`, {
+      path,
+      ...(root ? { root } : {}),
+    });
+    return (response.data as { job: FileTransferJob }).job;
+  }
+
+  async getFileTransfer(serverId: number, jobId: number) {
+    const response = await this.client.get(`/api/servers/${serverId}/files/transfers/${jobId}`);
+    return (response.data as { job: FileTransferJob }).job;
+  }
+
   async uploadServerFile(
     serverId: number,
     destDir: string,
@@ -732,7 +781,7 @@ class ApiClient {
 
     if (file.size <= SMALL_LIMIT) {
       await this.client.put(`/api/servers/${serverId}/files/upload`, file, {
-        params: { path: destPath, overwrite: '1', ...(root ? { root } : {}) },
+        params: { path: destPath, overwrite: 'true', ...(root ? { root } : {}) },
         headers: { 'Content-Type': 'application/octet-stream' },
         timeout: LONG_TIMEOUT_MS,
         onUploadProgress: (e) =>
@@ -753,24 +802,29 @@ class ApiClient {
       for (let i = 0; i < totalChunks; i++) {
         const start = i * CHUNK_SIZE;
         const chunk = file.slice(start, Math.min(start + CHUNK_SIZE, file.size));
-        await this.client.put(
-          `/api/servers/${serverId}/files/upload-sessions/${uploadId}/chunks`,
-          chunk,
-          {
-            params: {
-              relativePath,
-              chunkIndex: i,
-              totalChunks,
-              fileSize: file.size,
-              ...(root ? { root } : {}),
-            },
-            headers: { 'Content-Type': 'application/octet-stream' },
-            timeout: LONG_TIMEOUT_MS,
-            onUploadProgress: (e) => {
-              const chunkPct = e.total ? e.loaded / e.total : 0;
-              onProgress?.(Math.round(((i + chunkPct) / totalChunks) * 100));
-            },
-          }
+        // Retry the individual chunk on transient failures. The backend dedups
+        // chunks it already has, so re-sending is safe and cheap, and it avoids
+        // failing the whole (possibly large) file over one network hiccup.
+        await retryWithBackoff(() =>
+          this.client.put(
+            `/api/servers/${serverId}/files/upload-sessions/${uploadId}/chunks`,
+            chunk,
+            {
+              params: {
+                relativePath,
+                chunkIndex: i,
+                totalChunks,
+                fileSize: file.size,
+                ...(root ? { root } : {}),
+              },
+              headers: { 'Content-Type': 'application/octet-stream' },
+              timeout: LONG_TIMEOUT_MS,
+              onUploadProgress: (e) => {
+                const chunkPct = e.total ? e.loaded / e.total : 0;
+                onProgress?.(Math.round(((i + chunkPct) / totalChunks) * 100));
+              },
+            }
+          )
         );
       }
 
@@ -856,13 +910,9 @@ class ApiClient {
 
   // ── Panel updates ────────────────────────────────────────────────────────
 
-  async checkPanelUpdate(): Promise<{
-    currentVersion: string;
-    latestVersion: string | null;
-    updateAvailable: boolean;
-  }> {
+  async checkPanelUpdate(): Promise<PanelUpdateCheck> {
     const response = await this.client.get('/api/system/update/check');
-    return response.data as { currentVersion: string; latestVersion: string | null; updateAvailable: boolean };
+    return response.data as PanelUpdateCheck;
   }
 
   async startPanelUpdate(version: string): Promise<{
@@ -1003,6 +1053,86 @@ class ApiClient {
   async patchPalworldSettings(serverId: number, settings: Record<string, string | number | boolean>) {
     const response = await this.client.patch(`/api/servers/${serverId}/palworld/settings`, { settings });
     return response.data as { updated: string[]; settings: Array<unknown> };
+  }
+
+  // ── Project Zomboid OVHcloud ──────────────────────────────────────────────
+
+  async getProjectZomboidSettings(serverId: number) {
+    const response = await this.client.get(`/api/servers/${serverId}/project-zomboid/settings`);
+    return response.data as {
+      settings: Array<{
+        key: string; label: string; description: string;
+        type: 'integer' | 'boolean' | 'string' | 'float' | 'select';
+        options?: Array<{ label: string; value: string }> | string[];
+        min?: number; max?: number;
+        value: string | number | boolean;
+      }>;
+    };
+  }
+
+  async patchProjectZomboidSettings(serverId: number, settings: Record<string, string | number | boolean>) {
+    const response = await this.client.patch(`/api/servers/${serverId}/project-zomboid/settings`, { settings });
+    return response.data as { updated: string[]; settings: Array<unknown> };
+  }
+
+  async getProjectZomboidMods(serverId: number) {
+    const response = await this.client.get(`/api/servers/${serverId}/project-zomboid/mods`);
+    return response.data as { mods: ProjectZomboidMod[] };
+  }
+
+  async getProjectZomboidWorkshopPreview(serverId: number, workshopId: string) {
+    const response = await this.client.get(
+      `/api/servers/${serverId}/project-zomboid/mods/workshop/${encodeURIComponent(workshopId)}`
+    );
+    return (response.data as { item: ProjectZomboidWorkshopPreview }).item;
+  }
+
+  // Bulk add: the backend resolves each Workshop item's mod ids via SteamCMD
+  // (synchronous, can take seconds). Accepts a string or array of Workshop ids.
+  async addProjectZomboidMods(serverId: number, workshopIds: string | string[]) {
+    const response = await this.client.post(`/api/servers/${serverId}/project-zomboid/mods`, { workshopIds });
+    return response.data as {
+      mods: ProjectZomboidMod[];
+      added: string[];
+      failed: string[];
+      skipped: string[];
+    };
+  }
+
+  async patchProjectZomboidMod(
+    serverId: number,
+    workshopId: string,
+    input: { enabled?: boolean; modIds?: ProjectZomboidModId[] }
+  ) {
+    const response = await this.client.patch(
+      `/api/servers/${serverId}/project-zomboid/mods/${encodeURIComponent(workshopId)}`,
+      input
+    );
+    return response.data as { mods: ProjectZomboidMod[] };
+  }
+
+  async reorderProjectZomboidMods(serverId: number, order: string[]) {
+    const response = await this.client.put(`/api/servers/${serverId}/project-zomboid/mods/order`, { order });
+    return response.data as { mods: ProjectZomboidMod[] };
+  }
+
+  async deleteProjectZomboidMod(serverId: number, workshopId: string) {
+    const response = await this.client.delete(
+      `/api/servers/${serverId}/project-zomboid/mods/${encodeURIComponent(workshopId)}`
+    );
+    return response.data as { mods: ProjectZomboidMod[] };
+  }
+
+  // Generic wipe (all OVHcloud games). Server must be stopped (backend returns 409
+  // otherwise). Soft resets the world/progress and returns the removed paths; hard
+  // wipes every volume and reinstalls the server (returns immediately).
+  async wipeServer(serverId: number, mode: 'soft' | 'hard') {
+    const response = await this.client.post(
+      `/api/servers/${serverId}/wipe/${encodeURIComponent(mode)}`
+    );
+    return response.data as
+      | { mode: 'soft'; removed: string[] }
+      | { mode: 'hard'; reinstalling: true };
   }
 
   // ── Counter-Strike 2 OVHcloud ─────────────────────────────────────────────

@@ -307,7 +307,7 @@ async function createSchema(database: Database): Promise<void> {
       CREATE TABLE IF NOT EXISTS file_transfer_jobs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         server_id INTEGER NOT NULL,
-        kind TEXT NOT NULL CHECK(kind IN ('upload')),
+        kind TEXT NOT NULL CHECK(kind IN ('upload','extract')),
         status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','running','completed','failed','cancelled')),
         root TEXT NOT NULL,
         base_path TEXT NOT NULL,

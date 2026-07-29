@@ -4,6 +4,9 @@ import { AppButton, AppToggle } from '../../src/ui/components';
 import { apiClient } from '../../utils/api';
 import { parseCs2Params, serializeCs2Params } from '../../utils/cs2Params';
 import { CS2FrameworksSection } from './CS2FrameworksTab';
+import { GameWipeTab } from './GameWipeTab';
+import { buildWipeModes } from './wipeModes';
+import { RestartToApplyNote } from './RestartToApplyNote';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -453,13 +456,16 @@ export function EnvVarsSection({
 
 // ── Main export ────────────────────────────────────────────────────────────
 
-type CS2SubTab = 'settings' | 'frameworks';
+type CS2SubTab = 'settings' | 'frameworks' | 'wipe';
 
 export interface CS2SectionsProps {
   serverId: number;
   serverStatus?: string | null;
   canEdit: boolean;
   canWriteFrameworks: boolean;
+  canWipeSoft?: boolean;
+  canWipeHard?: boolean;
+  onReinstallStarted?: () => void;
   /** Whether the caller holds `server.env`; the env-backed "Settings" sub-tab is hidden when false. */
   canManageEnv: boolean;
   borderColor: string;
@@ -475,6 +481,9 @@ export function CS2Sections({
   serverStatus,
   canEdit,
   canWriteFrameworks,
+  canWipeSoft,
+  canWipeHard,
+  onReinstallStarted,
   canManageEnv,
   borderColor,
   contentBg,
@@ -495,10 +504,16 @@ export function CS2Sections({
   const rawEditingRef = useRef(false);
   const isRunning = serverStatus === 'running';
 
+  const showWipeTab = buildWipeModes('counter-strike', {
+    canSoft: Boolean(canWipeSoft),
+    canHard: Boolean(canWipeHard),
+  }).length > 0;
+
   // The env-backed "Settings" sub-tab needs `server.env`; Frameworks is always available.
   const availableTabs: CS2SubTab[] = [
     ...(canManageEnv ? (['settings'] as CS2SubTab[]) : []),
     'frameworks',
+    ...(showWipeTab ? (['wipe'] as CS2SubTab[]) : []),
   ];
   const [activeTab, setActiveTab] = useState<CS2SubTab>(availableTabs[0]);
   const [visited, setVisited] = useState<Set<CS2SubTab>>(() => new Set([availableTabs[0]]));
@@ -615,7 +630,7 @@ export function CS2Sections({
                 : 'border-transparent text-gray-400 hover:text-white hover:border-gray-500'
             }`}
           >
-            {tab === 'settings' ? 'Settings' : 'Frameworks'}
+            {tab === 'settings' ? 'Settings' : tab === 'frameworks' ? 'Frameworks' : 'Wipe'}
           </button>
         ))}
       </div>
@@ -630,6 +645,7 @@ export function CS2Sections({
             </div>
           ) : (
             <>
+              <RestartToApplyNote serverStatus={serverStatus} />
               {/* General */}
               <div className={`${contentBg} border ${borderColor} rounded-lg p-4 sm:p-5 space-y-4`}>
                 <h4 className={`text-sm font-semibold ${textPrimary}`}>General</h4>
@@ -823,6 +839,22 @@ export function CS2Sections({
             serverId={serverId}
             serverStatus={serverStatus}
             canWrite={canWriteFrameworks}
+            borderColor={borderColor}
+            contentBg={contentBg}
+            textPrimary={textPrimary}
+            textSecondary={textSecondary}
+          />
+        </div>
+      )}
+      {visited.has('wipe') && showWipeTab && (
+        <div className={activeTab !== 'wipe' ? 'hidden' : ''}>
+          <GameWipeTab
+            family="counter-strike"
+            serverId={serverId}
+            serverStatus={serverStatus}
+            canWipeSoft={Boolean(canWipeSoft)}
+            canWipeHard={Boolean(canWipeHard)}
+            onReinstallStarted={onReinstallStarted}
             borderColor={borderColor}
             contentBg={contentBg}
             textPrimary={textPrimary}

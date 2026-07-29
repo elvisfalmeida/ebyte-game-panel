@@ -144,6 +144,8 @@ write_hytale_jvm_options() {
 
     if [ -n "${JAVA_XMX_EFFECTIVE}" ]; then
       printf '%s\n' "-Xmx${JAVA_XMX_EFFECTIVE}"
+    else
+      printf '%s\n' "-XX:MaxRAMPercentage=75"
     fi
   } > "${JVM_OPTIONS_TMP}"
 

@@ -9,6 +9,10 @@ export const PERMISSIONS = {
         delete: 'server.delete',
         commandSend: 'server.command.send',
         env: 'server.env',
+        wipe: {
+            soft: 'server.wipe.soft',
+            hard: 'server.wipe.hard',
+        },
     },
     scheduledTasks: {
         read: 'scheduledtasks.read',
@@ -74,6 +78,16 @@ export const PERMISSIONS = {
         settings: {
             read: 'palworld.settings.read',
             write: 'palworld.settings.write',
+        },
+    },
+    projectZomboid: {
+        settings: {
+            read: 'project-zomboid.settings.read',
+            write: 'project-zomboid.settings.write',
+        },
+        mods: {
+            read: 'project-zomboid.mods.read',
+            write: 'project-zomboid.mods.write',
         },
     },
 } as const;

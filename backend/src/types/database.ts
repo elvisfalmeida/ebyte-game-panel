@@ -36,7 +36,7 @@ export interface InstallationInteractionRow {
 export interface FileTransferJobRow {
   id: number;
   server_id: number;
-  kind: 'upload';
+  kind: 'upload' | 'extract';
   status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   root: string;
   base_path: string;

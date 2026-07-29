@@ -21,6 +21,9 @@ export const counterStrike2Adapter: OvhcloudImageAdapter = {
         user: 'gameserver',
         workdir: '/app',
     },
+    wipe: {
+        hard: true,
+    },
     routes: [
         { path: '/counter-strike-2', router: counterStrike2Routes },
     ],

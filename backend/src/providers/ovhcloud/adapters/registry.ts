@@ -4,6 +4,7 @@ import { counterStrike2Adapter } from './counterStrike2.js';
 import { hytaleAdapter } from './hytale.js';
 import { minecraftAdapter } from './minecraft.js';
 import { palworldAdapter } from './palworld.js';
+import { projectZomboidAdapter } from './projectZomboid.js';
 import type { OvhcloudImageAdapter } from './types.js';
 
 const KNOWN_OVHCLOUD_ADAPTERS: OvhcloudImageAdapter[] = [
@@ -11,6 +12,7 @@ const KNOWN_OVHCLOUD_ADAPTERS: OvhcloudImageAdapter[] = [
     counterStrike2Adapter,
     hytaleAdapter,
     palworldAdapter,
+    projectZomboidAdapter,
 ];
 
 export function getKnownOvhcloudAdapters(): OvhcloudImageAdapter[] {

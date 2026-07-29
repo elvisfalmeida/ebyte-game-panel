@@ -5,6 +5,7 @@ import { GameConfigAdvancedLinks } from './serverSettings/GameConfigAdvancedLink
 import { MinecraftSections, type MinecraftSectionsProps } from './serverSettings/MinecraftTab';
 import { HytaleSections, type HytaleSectionsProps } from './serverSettings/HytaleTab';
 import { PalworldSections, type PalworldSectionsProps } from './serverSettings/PalworldTab';
+import { ProjectZomboidSections, type ProjectZomboidSectionsProps } from './serverSettings/ProjectZomboidTab';
 import { CS2Sections, type CS2SectionsProps } from './serverSettings/CS2ConfigTab';
 import { AppButton, AppInput, AppSelect, AppSlider, AppToggle } from '../src/ui/components';
 import {
@@ -42,6 +43,7 @@ interface GameConfigTabProps {
   minecraftProps?: MinecraftSectionsProps | null;
   hytaleProps?: HytaleSectionsProps | null;
   palworldProps?: PalworldSectionsProps | null;
+  projectZomboidProps?: ProjectZomboidSectionsProps | null;
   cs2Props?: CS2SectionsProps | null;
   ovhcloudConfigFiles?: string[];
 }
@@ -158,6 +160,7 @@ export function GameConfigTab({
   minecraftProps,
   hytaleProps,
   palworldProps,
+  projectZomboidProps,
   cs2Props,
   ovhcloudConfigFiles,
 }: GameConfigTabProps) {
@@ -680,7 +683,7 @@ export function GameConfigTab({
   const borderColor = 'border-gray-700';
   const textPrimary = 'text-white';
   const textSecondary = 'text-gray-400';
-  const hasGameConfiguration = detectedConfigFiles.length > 0 || verifiedConfigFiles.length > 0 || Boolean(minecraftProps) || Boolean(hytaleProps) || Boolean(palworldProps) || Boolean(cs2Props);
+  const hasGameConfiguration = detectedConfigFiles.length > 0 || verifiedConfigFiles.length > 0 || Boolean(minecraftProps) || Boolean(hytaleProps) || Boolean(palworldProps) || Boolean(projectZomboidProps) || Boolean(cs2Props);
   const showSaveSuccessToast = Boolean(saveSuccessMessage && !configChanged);
   const showBottomStatusPanel = Boolean(saveError);
 
@@ -995,13 +998,31 @@ export function GameConfigTab({
             </div>
           )}
 
+          {projectZomboidProps && (
+            <div className="px-1 sm:px-2">
+              <ProjectZomboidSections
+                {...projectZomboidProps}
+                advancedLinksNode={
+                  <GameConfigAdvancedLinks
+                    configFiles={detectedConfigFiles}
+                    isLoading={configFilesLoading}
+                    error={configFilesError}
+                    canReadFileManager={canReadFileManager}
+                    canWriteFileManager={canWriteFileManager}
+                    onOpenFileManagerPath={openFileInFileManager}
+                  />
+                }
+              />
+            </div>
+          )}
+
           {cs2Props && (
             <div className="px-1 sm:px-2">
               <CS2Sections {...cs2Props} />
             </div>
           )}
 
-          {!minecraftProps && !hytaleProps && !palworldProps && !cs2Props && (
+          {!minecraftProps && !hytaleProps && !palworldProps && !projectZomboidProps && !cs2Props && (
             <GameConfigAdvancedLinks
               configFiles={detectedConfigFiles}
               isLoading={configFilesLoading}

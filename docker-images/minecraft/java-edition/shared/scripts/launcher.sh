@@ -84,6 +84,8 @@ fi
 
 if [ -n "${JAVA_XMX}" ]; then
   set -- "$@" "-Xmx${JAVA_XMX}"
+else
+  set -- "$@" "-XX:MaxRAMPercentage=75"
 fi
 
 set -- "$@" -jar "${SERVER_JAR}" nogui

@@ -19,6 +19,7 @@ import {
     startHytaleServer,
 } from '../images/hytale/service.js';
 import hytaleRoutes from '../images/hytale/routes.js';
+import { resolveHytaleSoftWipeTargets } from '../images/hytale/wipe.js';
 import { OVHCLOUD_DOCKER_STOP_TIMEOUT_SECONDS } from './common.js';
 import type { OvhcloudImageAdapter, OvhcloudInstallResolution } from './types.js';
 
@@ -57,6 +58,9 @@ export const hytaleAdapter: OvhcloudImageAdapter = {
         script: '/app/send-command.sh',
         user: 'gameserver',
         workdir: '/app',
+    },
+    wipe: {
+        soft: resolveHytaleSoftWipeTargets,
     },
     routes: [
         { path: '/hytale', router: hytaleRoutes },

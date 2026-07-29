@@ -1,5 +1,25 @@
 # 📋 Changelog
 
+## v1.2.0 — 2026-07-30
+
+Adds **Project Zomboid**, a generic **server wipe**, and **archive extraction** in the File Manager.
+
+### ✨ Added
+
+- **Project Zomboid** — new OVHcloud game server image with full panel integration: installation, game settings, console commands, backups & restore, a build/branch selector, and a mods manager that auto-resolves Steam Workshop items (Workshop ID → Mod ID) with per-mod enable/ordering.
+- **Server wipe** — reset a server without rebuilding it by hand: a *soft wipe* resets the world and player progression while keeping the configuration, mods, and backups; a *hard wipe* reinstalls the server from scratch while keeping its configuration. Available per game.
+- **File Manager — archive extraction** — upload a `.zip`, `.tar.gz`, `.tgz`, or `.tar` and extract it directly on the server in one action, instead of uploading hundreds of files one by one.
+
+### 🔧 Changed
+
+- **Minecraft & Hytale memory** — the JVM heap now sizes itself to about 75% of the container's RAM when `JAVA_XMX` is unset, instead of defaulting to a fixed 6 GB.
+- **File Manager** — hidden files (dotfiles) are hidden by default, with a toggle to reveal them.
+- Minor UI polish and consistency improvements.
+
+### 🐛 Fixed
+
+- **File Manager — uploads** — large multi-file uploads are now reliable: files upload with bounded concurrency and automatic retry instead of all at once, which previously caused random upload failures.
+
 ## v1.1.0 — 2026-07-10
 
 Adds **Palworld** support, improves live logs and server status tracking, and reworks the per-game configuration UI.

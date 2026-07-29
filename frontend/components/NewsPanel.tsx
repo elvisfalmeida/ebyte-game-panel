@@ -114,7 +114,7 @@ export function NewsPanel() {
 
     const interval = window.setInterval(() => {
       setCurrentNewsIndex((prev) => (prev + 1) % newsItems.length);
-    }, 5000);
+    }, 15000);
 
     return () => window.clearInterval(interval);
   }, [newsItems.length, isPaused]);

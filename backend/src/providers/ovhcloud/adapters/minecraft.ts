@@ -9,6 +9,7 @@ import {
     normalizeMinecraftEnv,
 } from '../images/minecraft.js';
 import { createMinecraftBackup, restoreMinecraftBackup } from '../images/minecraft/backups.js';
+import { resolveMinecraftSoftWipeTargets } from '../images/minecraft/wipe.js';
 import minecraftRoutes from '../images/minecraft/routes.js';
 import { OVHCLOUD_DOCKER_STOP_TIMEOUT_SECONDS } from './common.js';
 import type { OvhcloudImageAdapter, OvhcloudInstallResolution } from './types.js';
@@ -22,6 +23,10 @@ export const minecraftAdapter: OvhcloudImageAdapter = {
         script: '/app/send-command.sh',
         user: 'gameserver',
         workdir: '/app',
+    },
+    wipe: {
+        soft: resolveMinecraftSoftWipeTargets,
+        hard: true,
     },
     routes: [
         { path: '/minecraft', router: minecraftRoutes },

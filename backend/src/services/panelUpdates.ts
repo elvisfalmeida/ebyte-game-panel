@@ -6,7 +6,8 @@ import { getConfig } from '../config.js';
 import { logError } from '../utils/logger.js';
 import { toIsoTimestamp, toIsoTimestampOrNull } from '../utils/time.js';
 
-const GITHUB_TAGS_URL = 'https://api.github.com/repos/ovh/game-panel/tags?per_page=100';
+const GITHUB_RELEASES_URL = 'https://api.github.com/repos/ovh/game-panel/releases?per_page=100';
+const RELEASES_CACHE_TTL_MS = 10 * 60 * 1000;
 const VERSION_RE = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
 
 type ParsedVersion = {
@@ -17,14 +18,31 @@ type ParsedVersion = {
   prerelease: string[];
 };
 
-type GitHubTag = {
+type GitHubRelease = {
+  tag_name?: unknown;
   name?: unknown;
+  body?: unknown;
+  html_url?: unknown;
+  published_at?: unknown;
+  draft?: unknown;
+  prerelease?: unknown;
+};
+
+export type PanelReleaseNotes = {
+  version: string;
+  name: string | null;
+  body: string | null;
+  htmlUrl: string | null;
+  publishedAt: string | null;
+  prerelease: boolean;
 };
 
 export type PanelUpdateCheck = {
   currentVersion: string;
   latestVersion: string | null;
   updateAvailable: boolean;
+  currentRelease: PanelReleaseNotes | null;
+  newerReleases: PanelReleaseNotes[];
 };
 
 export type PanelUpdateStartResult = {
@@ -101,8 +119,15 @@ function versionFromTag(tag: string): string | null {
   return parseVersion(version) ? version : null;
 }
 
-async function fetchAvailableVersions(): Promise<string[]> {
-  const response = await fetch(GITHUB_TAGS_URL, {
+let releasesCache: { fetchedAt: number; releases: PanelReleaseNotes[] } | null = null;
+
+async function fetchReleaseNotes(): Promise<PanelReleaseNotes[]> {
+  const now = Date.now();
+  if (releasesCache && now - releasesCache.fetchedAt < RELEASES_CACHE_TTL_MS) {
+    return releasesCache.releases;
+  }
+
+  const response = await fetch(GITHUB_RELEASES_URL, {
     headers: {
       Accept: 'application/vnd.github+json',
       'User-Agent': 'GamePanel-Updater',
@@ -110,33 +135,67 @@ async function fetchAvailableVersions(): Promise<string[]> {
   });
 
   if (!response.ok) {
-    throw Object.assign(new Error(`Unable to fetch GitHub tags (${response.status})`), { statusCode: 502 });
+    throw Object.assign(new Error(`Unable to fetch GitHub releases (${response.status})`), { statusCode: 502 });
   }
 
-  const body = await response.json() as GitHubTag[];
-  const versions = body
-    .map((tag) => typeof tag.name === 'string' ? versionFromTag(tag.name) : null)
-    .filter((version): version is string => Boolean(version));
+  const body = await response.json();
+  const entries: GitHubRelease[] = Array.isArray(body) ? body : [];
+  const releases: PanelReleaseNotes[] = [];
 
-  return Array.from(new Set(versions)).sort((a, b) => {
-    const parsedA = parseVersion(a);
-    const parsedB = parseVersion(b);
+  for (const entry of entries) {
+    if (!entry || entry.draft === true) continue;
+    const tagName = typeof entry.tag_name === 'string' ? entry.tag_name : null;
+    const version = tagName ? versionFromTag(tagName) : null;
+    if (!version) continue;
+
+    releases.push({
+      version,
+      name: typeof entry.name === 'string' && entry.name.trim() ? entry.name : null,
+      body: typeof entry.body === 'string' && entry.body.trim() ? entry.body : null,
+      htmlUrl: typeof entry.html_url === 'string' ? entry.html_url : null,
+      publishedAt: typeof entry.published_at === 'string' ? entry.published_at : null,
+      prerelease: entry.prerelease === true,
+    });
+  }
+
+  releases.sort((a, b) => {
+    const parsedA = parseVersion(a.version);
+    const parsedB = parseVersion(b.version);
     if (!parsedA || !parsedB) return 0;
     return compareVersions(parsedB, parsedA);
   });
+
+  releasesCache = { fetchedAt: now, releases };
+  return releases;
+}
+
+async function fetchAvailableVersions(): Promise<string[]> {
+  const releases = await fetchReleaseNotes();
+  return Array.from(new Set(releases.map((release) => release.version)));
 }
 
 export async function checkPanelUpdate(): Promise<PanelUpdateCheck> {
   const currentVersion = getAppVersion();
   const current = parseVersion(currentVersion);
-  const versions = await fetchAvailableVersions();
-  const latestVersion = versions[0] ?? null;
+  const releases = await fetchReleaseNotes();
+
+  const latestVersion = releases[0]?.version ?? null;
   const latest = latestVersion ? parseVersion(latestVersion) : null;
+
+  const currentRelease = releases.find((release) => release.version === currentVersion) ?? null;
+  const newerReleases = current
+    ? releases.filter((release) => {
+        const parsed = parseVersion(release.version);
+        return parsed ? compareVersions(parsed, current) > 0 : false;
+      })
+    : [];
 
   return {
     currentVersion,
     latestVersion,
     updateAvailable: Boolean(current && latest && compareVersions(latest, current) > 0),
+    currentRelease,
+    newerReleases,
   };
 }
 

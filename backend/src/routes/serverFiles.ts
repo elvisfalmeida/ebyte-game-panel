@@ -29,6 +29,7 @@ import {
     receiveUploadChunk,
     resolveDownloadTarget,
     SMALL_UPLOAD_LIMIT_BYTES,
+    startArchiveExtraction,
     streamDirectoryZip,
     streamFileDownload,
 } from '../services/fileTransfers.js';
@@ -267,6 +268,39 @@ router.delete('/upload-sessions/:uploadId', requireServerPermission(PERMISSIONS.
             route: 'ROUTE:FILES:UPLOAD_CANCEL',
             serverId: req.params.id,
             fallbackMessage: 'Failed to cancel upload session',
+        });
+    }
+});
+
+// POST /api/servers/:id/files/extract
+router.post('/extract', requireServerPermission(PERMISSIONS.fs.write), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+        const serverId = requirePositiveInt(req.params.id, 'Invalid server id');
+        const body = requireBodyObject(req.body);
+
+        const archivePath = optionalTrimmedString(body.path);
+        if (!archivePath) return res.status(400).json({ error: 'Missing path' });
+
+        const root = getBodyRoot(body);
+        const dest = optionalTrimmedString(body.dest);
+        const overwrite = body.overwrite === undefined ? true : body.overwrite === true;
+        const deleteArchive = body.deleteArchive === true;
+
+        const job = await startArchiveExtraction({
+            serverId,
+            root,
+            path: archivePath,
+            dest,
+            overwrite,
+            deleteArchive,
+        });
+
+        return res.status(202).json({ job });
+    } catch (error) {
+        return handleFileRouteError(res, error, {
+            route: 'ROUTE:FILES:EXTRACT',
+            serverId: req.params.id,
+            fallbackMessage: 'Failed to extract archive',
         });
     }
 });

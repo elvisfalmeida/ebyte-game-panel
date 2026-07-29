@@ -4,11 +4,15 @@ import {
   Copy,
   Download,
   Edit2,
+  Eye,
+  EyeOff,
+  FileArchive,
   FilePlus,
   FileText,
   Folder,
   FolderPlus,
   Home,
+  Loader2,
   RefreshCw,
   Save,
   Trash2,
@@ -30,6 +34,20 @@ interface FileItem {
   name: string;
   type: 'file' | 'folder' | 'symlink';
   size?: string;
+}
+
+// Formats the backend can extract server-side. Kept in sync with the extract route.
+const ARCHIVE_EXTENSIONS = ['.zip', '.tar.gz', '.tgz', '.tar'];
+function isExtractableArchive(name: string): boolean {
+  const lower = name.toLowerCase();
+  return ARCHIVE_EXTENSIONS.some((ext) => lower.endsWith(ext));
+}
+
+export interface ExtractStatus {
+  name: string;
+  status: 'running' | 'done' | 'failed';
+  completedFiles: number;
+  error?: string;
 }
 
 export interface UploadQueueItem {
@@ -96,6 +114,9 @@ interface FileManagerTabProps {
   copyContentSuccess: boolean;
   onUploadFiles?: (files: File[]) => void;
   uploadQueue?: UploadQueueItem[];
+  onRetryFailedUploads?: () => void;
+  onExtractFile?: (fileName: string) => void;
+  extractStatus?: ExtractStatus | null;
 }
 
 export function FileManagerTab({
@@ -149,7 +170,11 @@ export function FileManagerTab({
   copyContentSuccess,
   onUploadFiles,
   uploadQueue,
+  onRetryFailedUploads,
+  onExtractFile,
+  extractStatus,
 }: FileManagerTabProps) {
+  const isExtracting = extractStatus?.status === 'running';
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       if (canWriteFiles && onUploadFiles && acceptedFiles.length > 0) {
@@ -181,6 +206,7 @@ export function FileManagerTab({
   const MOVE_MIME = 'application/x-gp-move';
   const [dragSourceName, setDragSourceName] = useState<string | null>(null);
   const [dropTargetName, setDropTargetName] = useState<string | null>(null);
+  const [showHidden, setShowHidden] = useState(false);
 
   const parentDir = '/' + currentPath.split('/').filter(Boolean).slice(0, -1).join('/');
 
@@ -299,6 +325,16 @@ export function FileManagerTab({
           </AppButton>
           <AppButton
             tone="ghost"
+            onClick={() => setShowHidden((v) => !v)}
+            className={`h-7 w-7 min-w-0 !min-h-0 rounded p-0 transition-colors ${
+              showHidden ? 'bg-gray-700 text-[var(--color-cyan-400)]' : 'hover:bg-gray-700 text-gray-400 hover:text-white'
+            }`}
+            title={showHidden ? 'Hide hidden files' : 'Show hidden files'}
+          >
+            {showHidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
+          </AppButton>
+          <AppButton
+            tone="ghost"
             onClick={handleCreateFolder}
             disabled={!canWriteFiles}
             className={`h-7 w-7 min-w-0 !min-h-0 rounded p-0 transition-colors ${
@@ -383,7 +419,9 @@ export function FileManagerTab({
           {filesError && <div className="text-sm px-2 py-1 text-red-400">{filesError}</div>}
 
           {!filesLoading &&
-            files.map((file, index) => {
+            files
+              .filter((file) => showHidden || file.name === '..' || !file.name.startsWith('.'))
+              .map((file, index) => {
               const isParentNav = file.name === '..';
               const isSelected = !isParentNav && selectedItems.includes(file.name);
 
@@ -513,6 +551,23 @@ export function FileManagerTab({
                         onClick={(e) => e.stopPropagation()}
                         onDoubleClick={(e) => e.stopPropagation()}
                       >
+                        {file.type === 'file' && isExtractableArchive(file.name) && onExtractFile && (
+                          <AppButton
+                            tone="ghost"
+                            onClick={(e) => { e.stopPropagation(); onExtractFile(file.name); }}
+                            disabled={!canWriteFiles || isExtracting}
+                            className={`h-7 w-6 min-w-0 !min-h-0 rounded-md border-none bg-transparent p-0 transition-colors ${
+                              canWriteFiles && !isExtracting
+                                ? 'hover:bg-amber-500/20 text-amber-400 hover:text-amber-300'
+                                : 'text-gray-600 cursor-not-allowed'
+                            }`}
+                            title="Extract archive"
+                          >
+                            {isExtracting && extractStatus?.name === file.name
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : <FileArchive className="w-3 h-3" />}
+                          </AppButton>
+                        )}
                         <AppButton
                           tone="ghost"
                           onClick={(e) => handleDownloadPath(file, e)}
@@ -572,9 +627,55 @@ export function FileManagerTab({
         )}
       </div>
 
+      {/* Archive extraction status — activity only, no percentage (server-side work) */}
+      {extractStatus && (
+        <div className={`border-t ${borderColor} px-3 py-1.5 flex-shrink-0`}>
+          {extractStatus.status === 'failed' ? (
+            <div className="flex items-start gap-2 text-xs text-red-400">
+              <XCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+              <span>Failed to extract {extractStatus.name}: {extractStatus.error}</span>
+            </div>
+          ) : extractStatus.status === 'done' ? (
+            <div className="flex items-center gap-2 text-xs text-green-400">
+              <Check className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>Extracted {extractStatus.name} ({extractStatus.completedFiles} files).</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-xs text-gray-400">
+              <Loader2 className="w-3.5 h-3.5 flex-shrink-0 animate-spin" />
+              <span>Extracting {extractStatus.name}… {extractStatus.completedFiles} files</span>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Upload queue */}
-      {uploadQueue && uploadQueue.length > 0 && (
+      {uploadQueue && uploadQueue.length > 0 && (() => {
+        const total = uploadQueue.length;
+        const failed = uploadQueue.filter((it) => !!it.error).length;
+        const inProgress = uploadQueue.filter((it) => !it.done).length;
+        const succeeded = total - failed - inProgress;
+        // The batch is finished once nothing is in flight; only then surface a recap.
+        const finished = inProgress === 0;
+        return (
         <div className={`border-t ${borderColor} px-3 py-1.5 space-y-1 max-h-28 overflow-y-auto flex-shrink-0`}>
+          {finished && (failed > 0 || total > 1) && (
+            <div className="flex items-center justify-between gap-2 pb-1 text-xs">
+              <span className={failed > 0 ? 'text-red-400' : textPrimary}>
+                {succeeded} uploaded{failed > 0 ? `, ${failed} failed` : ''}
+              </span>
+              {failed > 0 && onRetryFailedUploads && (
+                <AppButton
+                  tone="ghost"
+                  onClick={() => onRetryFailedUploads()}
+                  className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-medium text-[var(--color-cyan-400)] hover:bg-[var(--color-cyan-400)]/10"
+                >
+                  <RefreshCw className="h-3 w-3" />
+                  Retry failed
+                </AppButton>
+              )}
+            </div>
+          )}
           {uploadQueue.map((item) => (
             <div key={item.id} className="flex items-center gap-2 text-xs min-w-0">
               <Upload className="w-3 h-3 text-gray-500 flex-shrink-0" />
@@ -591,7 +692,8 @@ export function FileManagerTab({
             </div>
           ))}
         </div>
-      )}
+        );
+      })()}
 
       {/* Editor modal */}
       {selectedFile && (

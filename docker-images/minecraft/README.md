@@ -49,7 +49,7 @@ Common tuning inputs (version inputs above are catalog-driven and have no defaul
 | --- | --- | --- | --- |
 | `EULA` | *(required)* | `TRUE` | Accept the Minecraft EULA; the server refuses to start otherwise. |
 | `JAVA_XMS` | *(unset)* | e.g. `2G`, `2048M` | Initial JVM heap size (Java images). |
-| `JAVA_XMX` | *(unset)* | e.g. `4G`, `4096M` | Maximum JVM heap size (Java images). |
+| `JAVA_XMX` | *(auto: 75% of RAM)* | e.g. `4G`, `4096M` | Maximum JVM heap size (Java images). When unset, the server runs with `-XX:MaxRAMPercentage=75`, i.e. ~75% of the container's memory limit (or of host RAM if no limit is set). |
 | `JAVA_OPTS`, `JVM_OPTS` | *(unset)* | JVM flags | Extra JVM options (Java images). |
 | `BACKUP_INCLUDE_SERVER_ARTIFACT` | `false` | boolean | Include the downloadable server artifact in backup archives. |
 

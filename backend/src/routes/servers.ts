@@ -2,6 +2,7 @@ import { Router } from 'express';
 import serverFileRoutes from './serverFile.js';
 import serverFilesRoutes from './serverFiles.js';
 import backupsRoutes from './backups.js';
+import wipeRoutes from './wipe.js';
 import terminalRoutes from './terminal.js';
 import scheduledTasksRoutes from './scheduledTasks.js';
 import consoleRoutes from './console.js';
@@ -21,6 +22,8 @@ router.use('/:id/file', serverFileRoutes);
 router.use('/:id/files', serverFilesRoutes);
 // /api/servers/:id/backups
 router.use('/:id/backups', backupsRoutes);
+// /api/servers/:id/wipe
+router.use('/:id/wipe', wipeRoutes);
 // /api/servers/:id/terminal
 router.use('/:id/terminal', terminalRoutes);
 // /api/servers/:id/console

@@ -54,6 +54,15 @@ export interface ServerSettingsAccess {
   canReadPalworldSettings: boolean;
   canWritePalworldSettings: boolean;
   canUsePalworld: boolean;
+  // Project Zomboid
+  canReadProjectZomboidSettings: boolean;
+  canWriteProjectZomboidSettings: boolean;
+  canReadProjectZomboidMods: boolean;
+  canWriteProjectZomboidMods: boolean;
+  canUseProjectZomboid: boolean;
+  // Generic wipe (all OVHcloud games)
+  canWipeSoft: boolean;
+  canWipeHard: boolean;
   // CS2
   canWriteCS2Frameworks: boolean;
   canAccessTab: (tab: SettingsTab) => boolean;
@@ -94,6 +103,11 @@ export function createServerSettingsAccess(
   const canReadScheduledTasks = hasServerPermission('scheduledtasks.read');
   const canWriteScheduledTasks = hasServerPermission('scheduledtasks.write');
 
+  // Generic wipe permissions (apply to every OVHcloud game that supports the mode).
+  const canWipeSoft = hasServerPermission('server.wipe.soft');
+  const canWipeHard = hasServerPermission('server.wipe.hard');
+  const canWipeAny = canWipeSoft || canWipeHard;
+
   // Minecraft Java
   const canReadMinecraftSettings = hasServerPermission('minecraft.settings.read');
   const canWriteMinecraftSettings = hasServerPermission('minecraft.settings.write');
@@ -113,19 +127,29 @@ export function createServerSettingsAccess(
     canReadMinecraftWhitelist ||
     canReadMinecraftBans ||
     canReadMinecraftIpBans ||
-    canReadMinecraftAddons;
+    canReadMinecraftAddons ||
+    canWipeAny;
 
   // Hytale
   const canReadHytaleSettings = hasServerPermission('hytale.settings.read');
   const canWriteHytaleSettings = hasServerPermission('hytale.settings.write');
   const canReadHytaleMods = hasServerPermission('hytale.mods.read');
   const canWriteHytaleMods = hasServerPermission('hytale.mods.write');
-  const canUseHytale = canReadHytaleSettings || canWriteHytaleSettings || canReadHytaleMods || canWriteHytaleMods;
+  const canUseHytale = canReadHytaleSettings || canWriteHytaleSettings || canReadHytaleMods || canWriteHytaleMods || canWipeAny;
 
   // Palworld
   const canReadPalworldSettings = hasServerPermission('palworld.settings.read');
   const canWritePalworldSettings = hasServerPermission('palworld.settings.write');
-  const canUsePalworld = canReadPalworldSettings || canWritePalworldSettings;
+  const canUsePalworld = canReadPalworldSettings || canWritePalworldSettings || canWipeAny;
+
+  // Project Zomboid
+  const canReadProjectZomboidSettings = hasServerPermission('project-zomboid.settings.read');
+  const canWriteProjectZomboidSettings = hasServerPermission('project-zomboid.settings.write');
+  const canReadProjectZomboidMods = hasServerPermission('project-zomboid.mods.read');
+  const canWriteProjectZomboidMods = hasServerPermission('project-zomboid.mods.write');
+  const canUseProjectZomboid =
+    canReadProjectZomboidSettings || canWriteProjectZomboidSettings ||
+    canReadProjectZomboidMods || canWriteProjectZomboidMods || canWipeAny;
 
   // CS2
   const canWriteCS2Frameworks = hasServerPermission('cs2.frameworks.write');
@@ -133,7 +157,7 @@ export function createServerSettingsAccess(
   const hasAnySettingsAccess =
     canUseGameConfig || canUseFileManager || canUseTerminal || canUseBackup ||
     canEditContainerConfig || canReadScheduledTasks || canWriteScheduledTasks ||
-    canUseMinecraft || canUseHytale || canUsePalworld;
+    canUseMinecraft || canUseHytale || canUsePalworld || canUseProjectZomboid;
 
   const canAccessTab = (tab: SettingsTab): boolean => {
     switch (tab) {
@@ -187,6 +211,13 @@ export function createServerSettingsAccess(
     canReadPalworldSettings,
     canWritePalworldSettings,
     canUsePalworld,
+    canReadProjectZomboidSettings,
+    canWriteProjectZomboidSettings,
+    canReadProjectZomboidMods,
+    canWriteProjectZomboidMods,
+    canUseProjectZomboid,
+    canWipeSoft,
+    canWipeHard,
     canWriteCS2Frameworks,
     canAccessTab,
   };

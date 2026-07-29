@@ -132,6 +132,11 @@ jobs:
             "docker-images/palworld/Dockerfile"
 
           build_image \
+            "gamepanel-project-zomboid" \
+            "docker-images/project-zomboid" \
+            "docker-images/project-zomboid/Dockerfile"
+
+          build_image \
             "gamepanel-hytale-java25" \
             "docker-images/hytale" \
             "docker-images/hytale/Dockerfile"
@@ -252,6 +257,12 @@ jobs:
         uses: actions/dockerPush
         with:
           image: game-panel/gamepanel-palworld:${{ cds.version }}
+          tags: "${{ cds.version }}"
+
+      - id: push-gamepanel-project-zomboid
+        uses: actions/dockerPush
+        with:
+          image: game-panel/gamepanel-project-zomboid:${{ cds.version }}
           tags: "${{ cds.version }}"
 
       - id: push-gamepanel-hytale-java25

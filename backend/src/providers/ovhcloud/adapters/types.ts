@@ -84,6 +84,11 @@ export type OvhcloudConsoleSupport = {
     workdir?: string;
 };
 
+export type OvhcloudWipeSupport = {
+    soft?(server: GameServerRow): Promise<string[]> | string[];
+    hard?: boolean;
+};
+
 export type OvhcloudFeatureRoute = {
     path: string;
     router: Router;
@@ -104,6 +109,7 @@ export type OvhcloudImageAdapter = {
     backup?: OvhcloudBackupSupport;
     lifecycle?: OvhcloudLifecycleSupport;
     console?: OvhcloudConsoleSupport | ((server: GameServerRow) => OvhcloudConsoleSupport | undefined);
+    wipe?: OvhcloudWipeSupport;
     installSteps?: InstallStep[];
     routes?: OvhcloudFeatureRoute[];
 };

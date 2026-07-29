@@ -13,17 +13,21 @@ import {
   HYTALE_PRESETS,
   PALWORLD_OVHCLOUD_OPTIONS,
   PALWORLD_PRESETS,
+  PROJECT_ZOMBOID_OVHCLOUD_OPTIONS,
+  PROJECT_ZOMBOID_PRESETS,
   MINECRAFT_OVHCLOUD_OPTIONS,
   MINECRAFT_PRESETS,
   SCHEDULED_TASKS_OPTIONS,
   SERVER_GENERAL_OPTIONS,
   SERVER_PRESETS,
+  WIPE_OPTIONS,
   getAccessLevelLabel,
   isServerPermissionChecked,
   samePermissionSet,
   togglePermission,
   toggleServerPermission,
 } from './utils';
+import { getSupportedWipeModes } from '../serverSettings/wipeModes';
 
 interface SelectedUserRef {
   id: number;
@@ -107,8 +111,21 @@ export function UserEditDialog({
   );
   const isHytaleOvhcloudServer = isOvhcloud && selectedServer?.catalogId === 'hytale';
   const isPalworldOvhcloudServer = isOvhcloud && selectedServer?.catalogId === 'palworld';
+  const isProjectZomboidOvhcloudServer = isOvhcloud && selectedServer?.catalogId === 'project-zomboid';
   const isExternalServer = selectedServer?.provider === 'external';
   const isBusy = saveLoading;
+
+  // Wipe permissions are generic, but the role UI only shows the modes the game supports.
+  const wipeFamily = isMinecraftOvhcloudServer ? 'minecraft'
+    : isHytaleOvhcloudServer ? 'hytale'
+    : isPalworldOvhcloudServer ? 'palworld'
+    : isProjectZomboidOvhcloudServer ? 'project-zomboid'
+    : isCs2OvhcloudServer ? 'counter-strike'
+    : null;
+  const supportedWipeModes = getSupportedWipeModes(wipeFamily);
+  const wipeOptions = WIPE_OPTIONS.filter((opt) =>
+    supportedWipeModes.includes(opt.value === 'server.wipe.hard' ? 'hard' : 'soft')
+  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -296,6 +313,7 @@ export function UserEditDialog({
                           ? MINECRAFT_PRESETS.map((p) => ({ ...p, permissions: filterAddons(p.permissions) }))
                           : isHytaleOvhcloudServer ? HYTALE_PRESETS
                           : isPalworldOvhcloudServer ? PALWORLD_PRESETS
+                          : isProjectZomboidOvhcloudServer ? PROJECT_ZOMBOID_PRESETS
                           : isCs2OvhcloudServer ? CS2_PRESETS
                           : null;
                         // Replace Viewer and Operator with game-enriched versions, keep Full access
@@ -423,6 +441,37 @@ export function UserEditDialog({
                       </div>
                     )}
 
+                    {/* Wipe — OVHcloud games that support it; only the supported modes */}
+                    {!isExternalServer && wipeOptions.length > 0 && (
+                      <div>
+                        <span className="mb-2 block text-xs font-medium text-gray-400">Wipe</span>
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                          {wipeOptions.map((opt) => {
+                            const checked = isServerPermissionChecked(addMemberKnown, opt.value);
+                            return (
+                              <AppToggle
+                                key={`server-opt-${opt.value}`}
+                                ariaLabel={opt.label}
+                                checked={checked}
+                                size="compact"
+                                onChange={() =>
+                                  setAddMemberKnown((current) =>
+                                    toggleServerPermission(current, opt.value)
+                                  )
+                                }
+                                label={opt.label}
+                                className={`w-full flex-row-reverse justify-between rounded border px-3 py-2 transition-colors ${
+                                  checked
+                                    ? 'border-[var(--color-cyan-400)]/50 bg-[#0050D7]/10'
+                                    : 'border-gray-700 bg-[#111827]'
+                                }`}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Minecraft — OVHcloud only */}
                     {isMinecraftOvhcloudServer && (
                       <div>
@@ -493,6 +542,37 @@ export function UserEditDialog({
                         <span className="mb-2 block text-xs font-medium text-gray-400">Palworld</span>
                         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
                           {PALWORLD_OVHCLOUD_OPTIONS.map((opt) => {
+                            const checked = isServerPermissionChecked(addMemberKnown, opt.value);
+                            return (
+                              <AppToggle
+                                key={`server-opt-${opt.value}`}
+                                ariaLabel={opt.label}
+                                checked={checked}
+                                size="compact"
+                                onChange={() =>
+                                  setAddMemberKnown((current) =>
+                                    toggleServerPermission(current, opt.value)
+                                  )
+                                }
+                                label={opt.label}
+                                className={`w-full flex-row-reverse justify-between rounded border px-3 py-2 transition-colors ${
+                                  checked
+                                    ? 'border-[var(--color-cyan-400)]/50 bg-[#0050D7]/10'
+                                    : 'border-gray-700 bg-[#111827]'
+                                }`}
+                              />
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Project Zomboid — OVHcloud only */}
+                    {isProjectZomboidOvhcloudServer && (
+                      <div>
+                        <span className="mb-2 block text-xs font-medium text-gray-400">Project Zomboid</span>
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
+                          {PROJECT_ZOMBOID_OVHCLOUD_OPTIONS.map((opt) => {
                             const checked = isServerPermissionChecked(addMemberKnown, opt.value);
                             return (
                               <AppToggle

@@ -9,16 +9,52 @@ import {
   AppModalTitle,
 } from '../src/ui/components';
 import { useTheme } from '../contexts/ThemeContext';
-import { apiClient } from '../utils/api';
+import { useBodyScrollLock } from '../src/ui/utils/useBodyScrollLock';
+import { apiClient, type PanelUpdateCheck, type ReleaseNotes } from '../utils/api';
+import { Markdown } from './Markdown';
 
 interface PanelUpdateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  updateInfo: {
-    currentVersion: string;
-    latestVersion: string | null;
-    updateAvailable: boolean;
-  } | null;
+  updateInfo: PanelUpdateCheck | null;
+}
+
+// One version's release notes. The GitHub body already carries the version and date,
+// so we don't repeat them here — only a pre-release badge and a "View on GitHub" link.
+// `heading` (optional) shares the top row with the link so they align on one line.
+function ReleaseNotesBlock({ release, isDark, heading }: { release: ReleaseNotes; isDark: boolean; heading?: string }) {
+  const hasMeta = heading || release.prerelease || release.htmlUrl;
+  return (
+    <div className="space-y-1.5">
+      {hasMeta && (
+        <div className="flex flex-wrap items-center gap-2">
+          {heading && (
+            <span className={`text-xs font-medium uppercase tracking-wide ${isDark ? 'text-slate-500' : 'text-[#94a3b8]'}`}>
+              {heading}
+            </span>
+          )}
+          {release.prerelease && (
+            <span className="rounded-full border border-amber-500/30 bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-400">
+              pre-release
+            </span>
+          )}
+          {release.htmlUrl && (
+            <a
+              href={release.htmlUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto text-[11px] text-[#157EEA] hover:underline"
+            >
+              View on GitHub
+            </a>
+          )}
+        </div>
+      )}
+      {release.body
+        ? <Markdown className={isDark ? 'text-slate-300' : 'text-[#475569]'}>{release.body}</Markdown>
+        : <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-[#94a3b8]'}`}>No release notes available.</p>}
+    </div>
+  );
 }
 
 type ModalState = 'idle' | 'starting' | 'started' | 'error';
@@ -26,6 +62,7 @@ type ModalState = 'idle' | 'starting' | 'started' | 'error';
 export function PanelUpdateModal({ isOpen, onClose, updateInfo }: PanelUpdateModalProps) {
   const { theme } = useTheme();
   const isDark = theme === 'dark';
+  useBodyScrollLock(isOpen);
   const [state, setState] = useState<ModalState>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -58,14 +95,14 @@ export function PanelUpdateModal({ isOpen, onClose, updateInfo }: PanelUpdateMod
     <AppModal open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <AppModalContent
         dismissible={false}
-        className={`z-[61] w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-xl border shadow-xl ${
+        className={`z-[61] flex max-h-[90vh] w-[calc(100%-2rem)] max-w-2xl flex-col overflow-hidden rounded-xl border shadow-xl ${
           isDark
             ? 'border-white/10 bg-[#0d1524]'
             : 'border-[#e2e8f0] bg-white'
         }`}
       >
         <AppModalHeader
-          className={`flex items-center justify-between border-b px-5 py-4 ${
+          className={`flex shrink-0 items-center justify-between border-b px-5 py-4 ${
             isDark ? 'border-white/10 bg-[#101a2d]' : 'border-[#e2e8f0] bg-[#f8fafc]'
           }`}
         >
@@ -94,7 +131,7 @@ export function PanelUpdateModal({ isOpen, onClose, updateInfo }: PanelUpdateMod
           </AppButton>
         </AppModalHeader>
 
-        <AppModalBody className="px-5 py-5">
+        <AppModalBody className="flex-1 overflow-y-auto px-5 py-5">
           {/* Started state */}
           {state === 'started' && (
             <div className="flex flex-col items-center gap-4 text-center">
@@ -169,7 +206,12 @@ export function PanelUpdateModal({ isOpen, onClose, updateInfo }: PanelUpdateMod
                   ? 'Up to date — no newer release found.'
                   : `Your panel is up to date — v${updateInfo!.currentVersion}`}
               </div>
-              <AppButton type="button" tone="secondary" onClick={handleClose} className="w-full !text-white">
+
+              {updateInfo?.currentRelease && (
+                <ReleaseNotesBlock release={updateInfo.currentRelease} isDark={isDark} heading="What's in your version" />
+              )}
+
+              <AppButton type="button" tone="secondary" onClick={handleClose} className="self-center px-6 !text-white">
                 Close
               </AppButton>
             </div>
@@ -201,6 +243,27 @@ export function PanelUpdateModal({ isOpen, onClose, updateInfo }: PanelUpdateMod
                   </div>
                 </div>
               </div>
+
+              {/* Changelogs */}
+              {((updateInfo.newerReleases?.length ?? 0) > 0 || updateInfo.currentRelease) && (
+                <div className="space-y-4">
+                  {updateInfo.newerReleases?.length > 0 && (
+                    <div className="space-y-3">
+                      <p className={`text-xs font-medium uppercase tracking-wide ${isDark ? 'text-slate-500' : 'text-[#94a3b8]'}`}>
+                        What&apos;s new
+                      </p>
+                      {updateInfo.newerReleases.map((release) => (
+                        <ReleaseNotesBlock key={release.version} release={release} isDark={isDark} />
+                      ))}
+                    </div>
+                  )}
+                  {updateInfo.currentRelease && (
+                    <div className="border-t pt-3 border-white/10">
+                      <ReleaseNotesBlock release={updateInfo.currentRelease} isDark={isDark} heading="What's in your version" />
+                    </div>
+                  )}
+                </div>
+              )}
 
               <p className={`text-xs leading-relaxed ${isDark ? 'text-slate-400' : 'text-[#64748b]'}`}>
                 The backend, frontend, and Traefik stack will restart during the update.

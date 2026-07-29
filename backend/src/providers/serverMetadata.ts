@@ -26,6 +26,11 @@ export type OvhcloudPalworldMetadata = OvhcloudProviderMetadata & {
     serverType: 'palworld';
 };
 
+export type OvhcloudProjectZomboidMetadata = OvhcloudProviderMetadata & {
+    family: 'project-zomboid';
+    serverType: 'project-zomboid';
+};
+
 export function getLinuxGsmMetadata(server: GameServerRow): LinuxGsmProviderMetadata {
     if (server.provider !== 'linuxgsm') {
         throw Object.assign(new Error('Feature is only available for LinuxGSM servers'), { statusCode: 501 });
@@ -137,4 +142,14 @@ export function getOvhcloudPalworldMetadata(server: GameServerRow): OvhcloudPalw
     }
 
     return metadata as OvhcloudPalworldMetadata;
+}
+
+export function getOvhcloudProjectZomboidMetadata(server: GameServerRow): OvhcloudProjectZomboidMetadata {
+    const metadata = getOvhcloudMetadata(server);
+
+    if (metadata.family !== 'project-zomboid' || metadata.serverType !== 'project-zomboid') {
+        throw Object.assign(new Error('Feature is only available for OVHcloud Project Zomboid servers'), { statusCode: 501 });
+    }
+
+    return metadata as OvhcloudProjectZomboidMetadata;
 }

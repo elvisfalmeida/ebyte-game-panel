@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { apiClient } from '../../utils/api';
 import { GameSettingsSection } from './GameSettingsSection';
 import { ModsSection } from './ModsSection';
+import { GameWipeTab } from './GameWipeTab';
+import { buildWipeModes } from './wipeModes';
 
 export interface HytaleSectionsProps {
   serverId: number;
@@ -10,6 +12,9 @@ export interface HytaleSectionsProps {
   canWriteSettings: boolean;
   canReadMods: boolean;
   canWriteMods: boolean;
+  canWipeSoft?: boolean;
+  canWipeHard?: boolean;
+  onReinstallStarted?: () => void;
   advancedLinksNode?: React.ReactNode;
   borderColor: string;
   contentBg: string;
@@ -19,7 +24,7 @@ export interface HytaleSectionsProps {
 
 // ── HytaleSections (horizontal sub-tabs) ─────────────────────────────────
 
-type HytaleSubTab = 'settings' | 'mods';
+type HytaleSubTab = 'settings' | 'mods' | 'wipe';
 
 export function HytaleSections({
   serverId,
@@ -28,15 +33,24 @@ export function HytaleSections({
   canWriteSettings,
   canReadMods,
   canWriteMods,
+  canWipeSoft,
+  canWipeHard,
+  onReinstallStarted,
   advancedLinksNode,
   borderColor,
   contentBg,
   textPrimary,
   textSecondary,
 }: HytaleSectionsProps) {
+  const showWipeTab = buildWipeModes('hytale', {
+    canSoft: Boolean(canWipeSoft),
+    canHard: Boolean(canWipeHard),
+  }).length > 0;
+
   const tabs: { id: HytaleSubTab; label: string }[] = [
     canReadSettings && { id: 'settings', label: 'Server Settings' },
     canReadMods     && { id: 'mods',     label: 'Mods' },
+    showWipeTab     && { id: 'wipe',     label: 'Wipe' },
   ].filter(Boolean) as { id: HytaleSubTab; label: string }[];
 
   const firstTab = tabs[0]?.id ?? 'settings';
@@ -93,10 +107,27 @@ export function HytaleSections({
         <div className={activeTab !== 'mods' ? 'hidden' : ''}>
           <ModsSection
             serverId={serverId}
+            serverStatus={serverStatus}
             kind="mods"
             apiKind="hytale"
             canRead={canReadMods}
             canWrite={canWriteMods}
+            borderColor={borderColor}
+            contentBg={contentBg}
+            textPrimary={textPrimary}
+            textSecondary={textSecondary}
+          />
+        </div>
+      )}
+      {visited.has('wipe') && showWipeTab && (
+        <div className={activeTab !== 'wipe' ? 'hidden' : ''}>
+          <GameWipeTab
+            family="hytale"
+            serverId={serverId}
+            serverStatus={serverStatus}
+            canWipeSoft={Boolean(canWipeSoft)}
+            canWipeHard={Boolean(canWipeHard)}
+            onReinstallStarted={onReinstallStarted}
             borderColor={borderColor}
             contentBg={contentBg}
             textPrimary={textPrimary}

@@ -534,6 +534,16 @@ export async function readMinecraftJavaPropertiesMap(server: GameServerRow): Pro
     return readMinecraftPropertiesMap(server);
 }
 
+export async function readMinecraftLevelName(server: GameServerRow): Promise<string> {
+    try {
+        const values = await readMinecraftPropertiesMap(server);
+        const name = (values.get('level-name') ?? '').trim();
+        return name || 'world';
+    } catch {
+        return 'world';
+    }
+}
+
 export async function listMinecraftJavaSettings(server: GameServerRow): Promise<MinecraftSetting[]> {
     assertOvhcloudMinecraftJavaServer(server);
     return listMinecraftSettingsFromDefinitions(server, MINECRAFT_JAVA_SETTING_DEFINITIONS);

@@ -4,7 +4,10 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import type { Readable } from 'node:stream';
+import { createGunzip } from 'node:zlib';
 import yazl from 'yazl';
+import yauzl from 'yauzl';
+import { extract as createTarExtract } from 'tar-stream';
 import { fileTransferJobRepository, serverRepository } from '../database/index.js';
 import { parsePayload, serializeFileTransferJob } from '../database/repositories/fileTransferJobRepository.js';
 import type { FileTransferJobRow } from '../types/database.js';
@@ -21,6 +24,7 @@ export const MAX_UPLOAD_CHUNK_SIZE_BYTES = 32 * 1024 * 1024;
 export const FILE_TRANSFER_FINISHED_RETENTION_MS = 60 * 60_000;
 const FILE_TRANSFER_CLEANUP_INTERVAL_MS = 10 * 60_000;
 const MAX_RELATIVE_PATH_LENGTH = 1024;
+const PROGRESS_UPDATE_EVERY_FILES = 25;
 
 type CreateUploadSessionInput = {
     serverId: number;
@@ -60,6 +64,26 @@ type DownloadTarget = {
     type: 'file' | 'dir';
     size: number;
     contentType?: string;
+};
+
+type ArchiveFormat = 'zip' | 'targz' | 'tar';
+
+type ExtractEntry = {
+    name: string;
+    isDir: boolean;
+    isSymlink: boolean;
+    stream: Readable | null;
+};
+
+type ExtractEntryHandler = (entry: ExtractEntry) => Promise<void>;
+
+type StartExtractionInput = {
+    serverId: number;
+    root?: string;
+    path: string;
+    dest?: string;
+    overwrite: boolean;
+    deleteArchive: boolean;
 };
 
 function positiveInt(value: unknown, fallback = 0): number {
@@ -595,4 +619,269 @@ export function parseChunkQuery(query: Record<string, unknown>) {
         totalChunks: Number.parseInt(String(query.totalChunks ?? ''), 10),
         fileSize: Number.parseInt(String(query.fileSize ?? ''), 10),
     };
+}
+
+function detectArchiveFormat(apiPath: string): ArchiveFormat {
+    const name = apiPath.toLowerCase();
+    if (name.endsWith('.zip')) return 'zip';
+    if (name.endsWith('.tar.gz') || name.endsWith('.tgz')) return 'targz';
+    if (name.endsWith('.tar')) return 'tar';
+    throw Object.assign(
+        new Error('Unsupported archive format (use .zip, .tar.gz, .tgz or .tar)'),
+        { statusCode: 400 }
+    );
+}
+
+function resolveExtractTarget(destDir: string, entryName: string): string {
+    const cleaned = entryName.replace(/\\/g, '/').replace(/^\/+/, '');
+    if (!cleaned || cleaned.includes('\0')) {
+        throw Object.assign(new Error('Invalid archive entry path'), { statusCode: 400 });
+    }
+    const normalized = path.posix.normalize(cleaned);
+    if (normalized === '.' || normalized === '..' || normalized.startsWith('../') || normalized.includes('/../')) {
+        throw Object.assign(new Error('Archive entry escapes target directory'), { statusCode: 400 });
+    }
+    const abs = path.resolve(destDir, normalized);
+    const prefix = destDir.endsWith(path.sep) ? destDir : `${destDir}${path.sep}`;
+    if (abs !== destDir && !abs.startsWith(prefix)) {
+        throw Object.assign(new Error('Archive entry escapes target directory'), { statusCode: 400 });
+    }
+    return abs;
+}
+
+async function ensureExtractDir(
+    serverId: number,
+    dirAbs: string,
+    destDir: string,
+    chowned: Set<string>
+): Promise<void> {
+    await fs.mkdir(dirAbs, { recursive: true });
+    let current = dirAbs;
+    const stop = path.resolve(destDir);
+    while (current !== stop && current.startsWith(stop) && !chowned.has(current)) {
+        chowned.add(current);
+        await safeChown(serverId, current);
+        const parent = path.dirname(current);
+        if (parent === current) break;
+        current = parent;
+    }
+}
+
+async function writeExtractedFile(params: {
+    serverId: number;
+    stream: Readable;
+    destination: string;
+    overwrite: boolean;
+}): Promise<number> {
+    await assertTargetWritable(params.destination, params.overwrite);
+    const temp = `${params.destination}.extract-${crypto.randomUUID()}`;
+    let written = 0;
+    try {
+        params.stream.on('data', (chunk: Buffer) => {
+            written += chunk.length;
+        });
+        await pipeline(params.stream, createWriteStream(temp, { flags: 'w' }));
+        await fs.rename(temp, params.destination);
+        await safeChown(params.serverId, params.destination);
+        return written;
+    } catch (error) {
+        await fs.rm(temp, { force: true }).catch(() => undefined);
+        throw error;
+    }
+}
+
+function extractZipEntries(archiveAbs: string, onEntry: ExtractEntryHandler): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        yauzl.open(archiveAbs, { lazyEntries: true, autoClose: true }, (openErr, zip) => {
+            if (openErr || !zip) {
+                reject(openErr ?? new Error('Could not open zip archive'));
+                return;
+            }
+            zip.on('error', reject);
+            zip.on('end', resolve);
+            zip.on('entry', (entry) => {
+                void (async () => {
+                    const name: string = entry.fileName;
+                    const isDir = /\/$/.test(name);
+                    const unixMode = (entry.externalFileAttributes >>> 16) & 0o170000;
+                    const isSymlink = unixMode === 0o120000;
+
+                    if (isDir || isSymlink) {
+                        await onEntry({ name, isDir, isSymlink, stream: null });
+                        zip.readEntry();
+                        return;
+                    }
+
+                    await new Promise<void>((entryResolve, entryReject) => {
+                        zip.openReadStream(entry, (streamErr, readStream) => {
+                            if (streamErr || !readStream) {
+                                entryReject(streamErr ?? new Error('Could not read zip entry'));
+                                return;
+                            }
+                            onEntry({ name, isDir: false, isSymlink: false, stream: readStream })
+                                .then(entryResolve, entryReject);
+                        });
+                    });
+                    zip.readEntry();
+                })().catch(reject);
+            });
+            zip.readEntry();
+        });
+    });
+}
+
+function extractTarEntries(
+    archiveAbs: string,
+    gzipped: boolean,
+    onEntry: ExtractEntryHandler
+): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+        const extract = createTarExtract();
+
+        extract.on('entry', (header, stream, next) => {
+            void (async () => {
+                const name = header.name;
+                if (header.type === 'symlink' || header.type === 'link') {
+                    stream.resume();
+                    await onEntry({ name, isDir: false, isSymlink: true, stream: null });
+                    return;
+                }
+                if (header.type === 'directory') {
+                    stream.resume();
+                    await onEntry({ name, isDir: true, isSymlink: false, stream: null });
+                    return;
+                }
+                if (header.type !== 'file') {
+                    stream.resume();
+                    return;
+                }
+                await onEntry({ name, isDir: false, isSymlink: false, stream });
+            })().then(() => next(), (error) => {
+                stream.resume();
+                reject(error);
+            });
+        });
+        extract.on('finish', resolve);
+        extract.on('error', reject);
+
+        const source = createReadStream(archiveAbs);
+        source.on('error', reject);
+        if (gzipped) {
+            const gunzip = createGunzip();
+            gunzip.on('error', reject);
+            source.pipe(gunzip).pipe(extract);
+        } else {
+            source.pipe(extract);
+        }
+    });
+}
+
+async function runArchiveExtraction(ctx: {
+    jobId: number;
+    serverId: number;
+    archiveAbs: string;
+    destDir: string;
+    format: ArchiveFormat;
+    overwrite: boolean;
+    deleteArchive: boolean;
+}): Promise<void> {
+    await fileTransferJobRepository.start(ctx.jobId);
+
+    const chownedDirs = new Set<string>();
+    let completedFiles = 0;
+    let transferredBytes = 0;
+
+    const onEntry: ExtractEntryHandler = async (entry) => {
+        if (entry.isSymlink) return;
+
+        const targetAbs = resolveExtractTarget(ctx.destDir, entry.name);
+
+        if (entry.isDir) {
+            await ensureExtractDir(ctx.serverId, targetAbs, ctx.destDir, chownedDirs);
+            return;
+        }
+
+        await ensureExtractDir(ctx.serverId, path.dirname(targetAbs), ctx.destDir, chownedDirs);
+        const written = await writeExtractedFile({
+            serverId: ctx.serverId,
+            stream: entry.stream as Readable,
+            destination: targetAbs,
+            overwrite: ctx.overwrite,
+        });
+
+        completedFiles += 1;
+        transferredBytes += written;
+        if (completedFiles % PROGRESS_UPDATE_EVERY_FILES === 0) {
+            await fileTransferJobRepository.updateProgress(ctx.jobId, { completedFiles, transferredBytes });
+        }
+    };
+
+    try {
+        if (ctx.format === 'zip') {
+            await extractZipEntries(ctx.archiveAbs, onEntry);
+        } else {
+            await extractTarEntries(ctx.archiveAbs, ctx.format === 'targz', onEntry);
+        }
+
+        if (ctx.deleteArchive) {
+            await fs.rm(ctx.archiveAbs, { force: true }).catch(() => undefined);
+        }
+
+        await fileTransferJobRepository.complete(ctx.jobId, { completedFiles, transferredBytes });
+    } catch (error: any) {
+        const message = error?.code === 'ENOSPC'
+            ? 'No space left on device while extracting archive'
+            : (error instanceof Error ? error.message : 'Archive extraction failed');
+        await fileTransferJobRepository.fail(ctx.jobId, message).catch(() => undefined);
+        logError('FILE_TRANSFER:EXTRACT', error, { serverId: ctx.serverId, jobId: ctx.jobId });
+    }
+}
+
+export async function startArchiveExtraction(input: StartExtractionInput) {
+    const archive = await resolveServerPath({
+        serverId: input.serverId,
+        root: input.root,
+        path: input.path,
+    });
+    await ensureIsFile(archive.absPath, archive.rootDir);
+    const format = detectArchiveFormat(archive.apiPath);
+
+    const destApiPath = input.dest && input.dest.trim() ? input.dest : path.posix.dirname(archive.apiPath);
+    const dest = await resolveServerPath({
+        serverId: input.serverId,
+        root: input.root,
+        path: destApiPath,
+    });
+    await ensureIsDir(dest.absPath, dest.rootDir);
+
+    const archiveStat = await fs.stat(archive.absPath);
+    const job = await fileTransferJobRepository.create({
+        serverId: input.serverId,
+        kind: 'extract',
+        root: archive.root,
+        basePath: dest.apiPath,
+        totalBytes: 0,
+        totalFiles: 0,
+        payload: {
+            archivePath: archive.apiPath,
+            archiveBytes: archiveStat.size,
+            format,
+            overwrite: input.overwrite,
+            deleteArchive: input.deleteArchive,
+        },
+    });
+
+    void runArchiveExtraction({
+        jobId: job.id,
+        serverId: input.serverId,
+        archiveAbs: archive.absPath,
+        destDir: path.resolve(dest.absPath),
+        format,
+        overwrite: input.overwrite,
+        deleteArchive: input.deleteArchive,
+    }).catch((error) => {
+        logError('FILE_TRANSFER:EXTRACT:SPAWN', error, { serverId: input.serverId, jobId: job.id });
+    });
+
+    return serializeFileTransferJob(job);
 }

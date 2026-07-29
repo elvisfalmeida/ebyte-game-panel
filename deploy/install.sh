@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eEuo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=deploy/lib/common.sh
@@ -11,6 +11,43 @@ escape_env_value() {
   value="${value//\$/\$\$}"
   value="${value//\"/\\\"}"
   printf '"%s"' "$value"
+}
+
+INSTALL_LOG_FILE="${GP_INSTALL_LOG_FILE:-/var/log/ovh-gamepanel-install.log}"
+INSTALL_LOG_ACTIVE=0
+INSTALL_FAIL_LINE=""
+INSTALL_FAIL_CMD=""
+
+on_install_err() {
+  INSTALL_FAIL_LINE="$1"
+  INSTALL_FAIL_CMD="$2"
+}
+
+on_install_exit() {
+  local code=$?
+  [ "$INSTALL_LOG_ACTIVE" -eq 1 ] || return 0
+  if [ "$code" -eq 0 ]; then
+    printf '[OK] install completed %s\n' "$(date -u +%FT%TZ)" >>"$INSTALL_LOG_FILE"
+  elif [ -n "$INSTALL_FAIL_CMD" ]; then
+    printf '[FAILED] install aborted %s at line %s (exit %s): %s\n' \
+      "$(date -u +%FT%TZ)" "$INSTALL_FAIL_LINE" "$code" "$INSTALL_FAIL_CMD" >>"$INSTALL_LOG_FILE"
+  else
+    printf '[FAILED] install aborted %s (exit %s)\n' \
+      "$(date -u +%FT%TZ)" "$code" >>"$INSTALL_LOG_FILE"
+  fi
+}
+
+setup_install_logging() {
+  if { : >>"$INSTALL_LOG_FILE"; } 2>/dev/null; then
+    INSTALL_LOG_ACTIVE=1
+    printf '===== install started %s (v%s) =====\n' "$(date -u +%FT%TZ)" "${APP_VERSION:-unknown}" >>"$INSTALL_LOG_FILE"
+    exec > >(tee -a "$INSTALL_LOG_FILE") 2>&1
+    log "Writing install log to $INSTALL_LOG_FILE"
+  else
+    warn "Could not open $INSTALL_LOG_FILE; continuing without a file log."
+  fi
+  trap 'on_install_err "$LINENO" "$BASH_COMMAND"' ERR
+  trap on_install_exit EXIT
 }
 
 is_valid_ipv4() {
@@ -600,6 +637,7 @@ main() {
   ensure_linux
   parse_args "$@"
   ensure_root "$@"
+  setup_install_logging
   require_cmd systemctl
   LOCAL_SOURCE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
   require_local_source_tree "$LOCAL_SOURCE_ROOT"

@@ -1,12 +1,11 @@
-import { promises as fs } from 'node:fs';
 import { getOvhcloudPalworldMetadata } from '../../../serverMetadata.js';
 import type { GameServerRow } from '../../../../types/gameServer.js';
 import * as dockerUtils from '../../../../utils/docker.js';
 import { ensureServerMountDirs } from '../../../../utils/storage.js';
-import { resolveServerPath } from '../../../../services/fileExplorer.js';
 import { getBasenameFromApiPath } from '../../../../utils/fsBrowser.js';
 import { getRuntimeOwnership, parseStoredMounts } from '../../../runtimeConfig.js';
 import { OVHCLOUD_DOCKER_STOP_TIMEOUT_SECONDS } from '../../adapters/common.js';
+import { PALWORLD_SAVEGAMES_API_PATH, resolvePalworldWorldGuid } from './world.js';
 import type {
     OvhcloudBackupCreateResult,
     OvhcloudBackupLocation,
@@ -14,23 +13,8 @@ import type {
     OvhcloudBackupRestoreResult,
 } from '../../adapters/types.js';
 
-const PALWORLD_SAVEGAMES_API_PATH = '/server/Pal/Saved/SaveGames/0';
-
 export async function resolvePalworldBackupLocation(server: GameServerRow): Promise<OvhcloudBackupLocation> {
-    let guid: string | null = null;
-    try {
-        const resolved = await resolveServerPath({
-            serverId: server.id,
-            root: 'data',
-            path: PALWORLD_SAVEGAMES_API_PATH,
-        });
-        const entries = await fs.readdir(resolved.absPath, { withFileTypes: true });
-        const dirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
-        guid = dirs[0] ?? null;
-    } catch {
-        guid = null;
-    }
-
+    const guid = await resolvePalworldWorldGuid(server.id);
     const basePath = guid
         ? `${PALWORLD_SAVEGAMES_API_PATH}/${guid}/backup/world`
         : `${PALWORLD_SAVEGAMES_API_PATH}/backup/world`;

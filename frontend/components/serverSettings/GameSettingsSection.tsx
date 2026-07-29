@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Check, Info, Loader2, Save } from 'lucide-react';
 import { AppButton, AppInput, AppSelect, AppSlider, AppToggle } from '../../src/ui/components';
+import { RestartToApplyNote } from './RestartToApplyNote';
 
 // Shared settings form for games exposing a generic `{ settings: [...] }` API.
 // Each game injects its own `load`/`save`; field rendering lives here.
@@ -32,6 +33,10 @@ export interface GameSettingsSectionProps {
   contentBg: string;
   textPrimary: string;
   textSecondary: string;
+  // When true, settings can only be edited while the server is stopped (the
+  // backend rewrites its config on shutdown and returns 409 otherwise, e.g.
+  // Project Zomboid). Controls are locked while running.
+  editableOnlyWhenStopped?: boolean;
 }
 
 function SectionCard({ title, children, borderColor, contentBg, textPrimary }: {
@@ -64,10 +69,26 @@ function SuccessMsg({ msg }: { msg: string | null }) {
   );
 }
 
-// Options may arrive as plain strings or {label,value} pairs — normalize both.
+// Options may arrive as plain strings or {label,value} pairs, and the value may be
+// numeric (e.g. Project Zomboid select values are 1-based numbers). AppSelect compares
+// string values, so coerce everything to strings for display/selection; the original
+// (possibly numeric) value is restored at save time in resolveOutgoingValue.
 function normalizeOptions(options: GameSettingField['options']): GameSettingOption[] {
   if (!Array.isArray(options)) return [];
-  return options.map((o) => (typeof o === 'string' ? { label: o, value: o } : o));
+  return options.map((o) =>
+    typeof o === 'string' ? { label: o, value: o } : { label: String(o.label), value: String(o.value) }
+  );
+}
+
+// Map the (stringified) selected value back to the option's original value so numeric
+// select values are sent as numbers, not strings.
+function resolveOutgoingValue(field: GameSettingField, value: string | number | boolean): string | number | boolean {
+  if (field.type !== 'select' || !Array.isArray(field.options)) return value;
+  const match = field.options.find((o) =>
+    (typeof o === 'string' ? o : String(o.value)) === String(value)
+  );
+  if (match === undefined) return value;
+  return typeof match === 'string' ? match : match.value;
 }
 
 // Float sliders need a decimal step; derive ~100 steps across the range.
@@ -88,6 +109,7 @@ export function GameSettingsSection({
   contentBg,
   textPrimary,
   textSecondary,
+  editableOnlyWhenStopped = false,
 }: GameSettingsSectionProps) {
   const [fields, setFields] = useState<GameSettingField[]>([]);
   const [edits, setEdits] = useState<Record<string, string | number | boolean>>({});
@@ -97,6 +119,11 @@ export function GameSettingsSection({
   const [success, setSuccess] = useState<string | null>(null);
   const [openHelpKey, setOpenHelpKey] = useState<string | null>(null);
   const loaded = useRef(false);
+
+  const isRunning = serverStatus === 'running';
+  // Editing is blocked while running only for games that require a stopped server.
+  const editingLocked = editableOnlyWhenStopped && isRunning;
+  const canEdit = canWrite && !editingLocked;
 
   const loadSettings = useCallback(async () => {
     if (!canRead) return;
@@ -122,14 +149,15 @@ export function GameSettingsSection({
   }, [loadSettings]);
 
   const handleSave = async () => {
-    if (!canWrite || saving) return;
+    if (!canEdit || saving) return;
     setSaving(true);
     setError(null);
     setSuccess(null);
     try {
       const changed: Record<string, string | number | boolean> = {};
       fields.forEach((f) => {
-        if (edits[f.key] !== f.value) changed[f.key] = edits[f.key];
+        const next = resolveOutgoingValue(f, edits[f.key]);
+        if (next !== f.value) changed[f.key] = next;
       });
       if (Object.keys(changed).length === 0) {
         setSuccess('No changes to save.');
@@ -137,7 +165,11 @@ export function GameSettingsSection({
         return;
       }
       await save(serverId, changed);
-      setSuccess('Settings saved. Restart the server to apply the changes.');
+      setSuccess(
+        editableOnlyWhenStopped
+          ? 'Settings saved. They will apply on the next start.'
+          : 'Settings saved. Restart the server to apply the changes.'
+      );
       await loadSettings();
     } catch (err: any) {
       setError(err?.response?.data?.error || err?.message || 'Failed to save settings.');
@@ -148,12 +180,14 @@ export function GameSettingsSection({
 
   return (
     <SectionCard title="Server Settings" borderColor={borderColor} contentBg={contentBg} textPrimary={textPrimary}>
-      {serverStatus !== 'running' && (
-        <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-300">
-          <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>The server is not running. You can still edit and save settings — restart the server to apply changes.</span>
-        </div>
-      )}
+      {editableOnlyWhenStopped
+        ? isRunning && (
+            <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-300">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+              <span>The server must be stopped to edit these settings. Stop it, make your changes, then start it again.</span>
+            </div>
+          )
+        : <RestartToApplyNote serverStatus={serverStatus} />}
       {loading && (
         <div className="flex items-center gap-2 text-sm text-gray-400">
           <Loader2 className="w-4 h-4 animate-spin" />
@@ -205,7 +239,7 @@ export function GameSettingsSection({
                           checked={String(edits[field.key] ?? field.value) === 'true'}
                           onChange={(checked) => setEdits((prev) => ({ ...prev, [field.key]: checked }))}
                           className="shrink-0"
-                          disabled={!canWrite}
+                          disabled={!canEdit}
                         />
                       </div>
                     )}
@@ -215,7 +249,7 @@ export function GameSettingsSection({
                         onChange={(v) => setEdits((prev) => ({ ...prev, [field.key]: v }))}
                         options={normalizeOptions(field.options)}
                         className="w-full gp-game-config-select"
-                        disabled={!canWrite}
+                        disabled={!canEdit}
                       />
                     )}
                     {(field.type === 'integer' || field.type === 'float') && field.min != null && field.max != null ? (
@@ -230,7 +264,7 @@ export function GameSettingsSection({
                             [field.key]: field.type === 'float' ? (parseFloat(e.target.value) || 0) : (parseInt(e.target.value) || 0),
                           }))}
                           aria-label={field.label}
-                          disabled={!canWrite}
+                          disabled={!canEdit}
                         />
                         <div className={`grid grid-cols-3 items-center text-[11px] ${textSecondary}`}>
                           <span className="text-left">{field.min}</span>
@@ -244,7 +278,7 @@ export function GameSettingsSection({
                               const v = field.type === 'float' ? parseFloat(e.target.value) : parseInt(e.target.value);
                               if (!isNaN(v)) setEdits((prev) => ({ ...prev, [field.key]: Math.min(field.max!, Math.max(field.min!, v)) }));
                             }}
-                            disabled={!canWrite}
+                            disabled={!canEdit}
                             className="w-16 text-center text-xs font-semibold rounded px-1 py-0.5 mx-auto block bg-gp-surface-elevated border border-gray-600 focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan-400)]/40 focus:border-[var(--color-cyan-400)] text-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
                           <span className="text-right">{field.max}</span>
@@ -262,7 +296,7 @@ export function GameSettingsSection({
                           [field.key]: field.type === 'float' ? (parseFloat(e.target.value) || 0) : (parseInt(e.target.value) || 0),
                         }))}
                         className="w-full px-3 py-2 bg-gp-surface-elevated border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan-400)]/40 focus:border-[var(--color-cyan-400)]"
-                        disabled={!canWrite}
+                        disabled={!canEdit}
                       />
                     ) : null}
                     {field.type === 'string' && (
@@ -271,7 +305,7 @@ export function GameSettingsSection({
                         value={String(edits[field.key] ?? field.value)}
                         onChange={(e) => setEdits((prev) => ({ ...prev, [field.key]: e.target.value }))}
                         className="w-full px-3 py-2 bg-gp-surface-elevated border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-[var(--color-cyan-400)]/40 focus:border-[var(--color-cyan-400)]"
-                        disabled={!canWrite}
+                        disabled={!canEdit}
                       />
                     )}
                   </div>
@@ -284,7 +318,7 @@ export function GameSettingsSection({
               <AppButton
                 tone="primary"
                 onClick={handleSave}
-                disabled={saving}
+                disabled={saving || editingLocked}
                 className="flex items-center gap-1.5 px-5 py-2.5 rounded-lg text-sm font-medium disabled:opacity-60"
               >
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}

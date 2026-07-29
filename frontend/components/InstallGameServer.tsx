@@ -9,10 +9,11 @@ import { OVH_UNIFIED, filterLgsmForUnified } from '../utils/unifiedGameCatalog';
 import { getLinuxGsmGames, type LinuxGsmGame } from '../utils/linuxGsmCatalog';
 import { apiClient } from '../utils/api';
 import { GameVersionModal } from './GameVersionModal';
-import { AppButton, AppToggle } from '../src/ui/components';
+import { AppButton, AppSelect, AppToggle } from '../src/ui/components';
 import { ProviderLogo } from './gameServersTable/ProviderBadge';
 import { MinecraftVersionPicker } from './MinecraftVersionPicker';
 import { getMcServerType, getPickerManagedKeys, type McServerType } from '../utils/minecraftCatalog';
+import { fetchProjectZomboidBranches, type ProjectZomboidBranch } from '../utils/projectZomboidBranches';
 
 interface PortRow { host: string; container: string; label: string }
 interface EnvRow { key: string; value: string }
@@ -357,6 +358,7 @@ interface ConfigModalProps {
   hytaleOptions?: { patchline: string; profileUuid: string };
   setHytaleOptions?: (opts: { patchline: string; profileUuid: string }) => void;
   showPalworldAdmin?: boolean;
+  showProjectZomboidFields?: boolean;
   usedServerNames?: string[];
   requireSteamCredentials?: boolean;
   steamUsername?: string;
@@ -392,6 +394,7 @@ function ConfigModal({
   envRows, setEnvRows, showEnv, mountRows, setMountRows, catalogHealthcheck, onHealthcheckChange,
   hytaleOptions, setHytaleOptions,
   showPalworldAdmin,
+  showProjectZomboidFields,
   usedServerNames,
   requireSteamCredentials, steamUsername, setSteamUsername, steamPassword, setSteamPassword,
   requireGameCopy,
@@ -438,9 +441,79 @@ function ConfigModal({
     }
   };
 
+  // Project Zomboid: branch and admin password are backed by env vars (PZ_BRANCH,
+  // PZ_ADMIN_PASSWORD), kept in sync with the Environment Variables list like EULA.
+  const upsertEnv = (key: string, val: string) => {
+    const idx = envRows.findIndex((r) => r.key.trim().toUpperCase() === key);
+    if (idx >= 0) {
+      setEnvRows(envRows.map((r, i) => (i === idx ? { ...r, value: val } : r)));
+    } else {
+      setEnvRows([...envRows, { key, value: val }]);
+    }
+  };
+  const pzBranch = envRows.find((r) => r.key.trim().toUpperCase() === 'PZ_BRANCH')?.value ?? '';
+  const setPzBranch = (val: string) => upsertEnv('PZ_BRANCH', val);
+  const pzAdminPassword = envRows.find((r) => r.key.trim().toUpperCase() === 'PZ_ADMIN_PASSWORD')?.value ?? '';
+  const setPzAdminPassword = (val: string) => upsertEnv('PZ_ADMIN_PASSWORD', val);
+
+  const [pzBranches, setPzBranches] = React.useState<ProjectZomboidBranch[]>([]);
+  React.useEffect(() => {
+    if (!showProjectZomboidFields) return;
+    let cancelled = false;
+    void fetchProjectZomboidBranches().then((list) => { if (!cancelled) setPzBranches(list); });
+    return () => { cancelled = true; };
+  }, [showProjectZomboidFields]);
+
+  // Seed required PZ_* env rows so they are always present, visible and editable in
+  // the Environment Variables list. The backend relies on them (wipe, future map
+  // upload) and this avoids failures when the user edits their config manually.
+  // Empty PZ_BRANCH = default/stable; PZ_SERVERNAME defaults to "servertest".
+  const pzEnvSeeded = React.useRef(false);
+  React.useEffect(() => {
+    if (!showProjectZomboidFields) { pzEnvSeeded.current = false; return; }
+    if (pzEnvSeeded.current || envRows.length === 0) return;
+    pzEnvSeeded.current = true;
+    const defaults = [
+      { key: 'PZ_BRANCH', value: '' },
+      { key: 'PZ_SERVERNAME', value: 'servertest' },
+    ];
+    const missing = defaults.filter(
+      (d) => !envRows.some((r) => r.key.trim().toUpperCase() === d.key)
+    );
+    if (missing.length > 0) setEnvRows([...envRows, ...missing]);
+  }, [showProjectZomboidFields, envRows, setEnvRows]);
+
+  // Default the branch to the first available one once the list loads.
+  const pzBranchDefaulted = React.useRef(false);
+  React.useEffect(() => {
+    if (!showProjectZomboidFields) { pzBranchDefaulted.current = false; return; }
+    if (pzBranchDefaulted.current || pzBranches.length === 0) return;
+    pzBranchDefaulted.current = true;
+    if (pzBranch.trim() === '') setPzBranch(pzBranches[0].name);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showProjectZomboidFields, pzBranches]);
+
+  // Branch is picked from the fetched list; a custom branch can be set manually via
+  // the PZ_BRANCH environment variable (which stays in sync with this select).
+  const [showBranchHelp, setShowBranchHelp] = React.useState(false);
+  const branchOptions = React.useMemo(() => {
+    const opts: { value: string; label: string }[] = [];
+    const seen = new Set<string>();
+    for (const b of pzBranches) {
+      if (seen.has(b.name)) continue;
+      seen.add(b.name);
+      opts.push({ value: b.name, label: b.name });
+    }
+    // A value set via PZ_BRANCH that is not in the fetched list still shows up.
+    const current = pzBranch.trim();
+    if (current && !seen.has(current)) opts.push({ value: current, label: current });
+    return opts;
+  }, [pzBranches, pzBranch]);
+
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1f2937] dark:to-[#111827] border border-gray-200 dark:border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gradient-to-br dark:from-[#1f2937] dark:to-[#111827] border border-gray-200 dark:border-gray-700/50 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+       <div className="max-h-[90vh] overflow-y-auto">
         <div className="flex items-start justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700/50">
           <div>
             <h3 className="text-xl font-bold text-gray-900 dark:text-white inline-flex items-center gap-2.5">
@@ -518,6 +591,96 @@ function ConfigModal({
                 </button>
               </div>
             </div>
+          )}
+
+          {showProjectZomboidFields && (
+            <>
+              <div>
+                <div className="relative mb-2 flex">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Branch
+                    <AppButton
+                      tone="ghost"
+                      aria-label="About the branch choice"
+                      aria-expanded={showBranchHelp}
+                      onClick={() => setShowBranchHelp((v) => !v)}
+                      className="inline-flex h-5 shrink-0 items-center justify-center px-0.5 text-[var(--color-cyan-400)]/80 transition-colors hover:text-[var(--color-cyan-400)]"
+                    >
+                      <Info className="h-3.5 w-3.5" />
+                    </AppButton>
+                  </span>
+                  {showBranchHelp && (
+                    <div className="absolute left-0 top-full z-20 mt-2 w-[280px] max-w-[calc(100vw-4rem)]">
+                      <div className="absolute -top-1.5 left-4 h-3 w-3 rotate-45 border-l border-t border-gray-700/80 bg-gp-surface-input" />
+                      <div className="relative rounded-xl border border-gray-700/80 bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(11,18,32,0.98))] px-3.5 py-3 text-xs font-normal normal-case tracking-normal leading-relaxed text-gray-300 shadow-[0_18px_40px_rgba(2,6,23,0.45)] backdrop-blur-sm">
+                        Pick a Steam branch. Changing branch later can corrupt an existing world, so this is an install-time choice.
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <AppSelect
+                  className="gp-game-config-select gp-pz-branch-select"
+                  value={pzBranch.trim()}
+                  onChange={(v) => setPzBranch(v)}
+                  options={branchOptions}
+                  placeholder="Select a branch"
+                />
+              </div>
+
+              <div>
+                <div className="relative mb-2 flex">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Admin Password
+                    <AppButton
+                      tone="ghost"
+                      aria-label="About the admin password"
+                      aria-expanded={showAdminHelp}
+                      onClick={() => setShowAdminHelp((v) => !v)}
+                      className="inline-flex h-5 shrink-0 items-center justify-center px-0.5 text-[var(--color-cyan-400)]/80 transition-colors hover:text-[var(--color-cyan-400)]"
+                    >
+                      <Info className="h-3.5 w-3.5" />
+                    </AppButton>
+                  </span>
+                  {showAdminHelp && (
+                    <div className="absolute left-0 top-full z-20 mt-2 w-[280px] max-w-[calc(100vw-4rem)]">
+                      <div className="absolute -top-1.5 left-4 h-3 w-3 rotate-45 border-l border-t border-gray-700/80 bg-gp-surface-input" />
+                      <div className="relative rounded-xl border border-gray-700/80 bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(11,18,32,0.98))] px-3.5 py-3 text-xs font-normal normal-case tracking-normal leading-relaxed text-gray-300 shadow-[0_18px_40px_rgba(2,6,23,0.45)] backdrop-blur-sm">
+                        In-game admin account password (to run privileged console commands). This is not the server join password. Leave empty to let the panel generate one. You can change it later in Container Settings.
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type={showAdminPw ? 'text' : 'password'}
+                      value={pzAdminPassword ?? ''}
+                      onChange={(e) => setPzAdminPassword(e.target.value)}
+                      placeholder="Leave empty to auto-generate"
+                      spellCheck={false}
+                      autoComplete="off"
+                      className={`${inputCls} pr-10`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowAdminPw((v) => !v)}
+                      aria-label={showAdminPw ? 'Hide password' : 'Show password'}
+                      className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                    >
+                      {showAdminPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setPzAdminPassword(generatePalworldAdminPassword())}
+                    className="flex-shrink-0 rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-white/10 transition-colors"
+                  >
+                    Regenerate
+                  </button>
+                </div>
+              </div>
+            </>
           )}
 
           {mcServerType && onPickerEnvChange && (
@@ -744,6 +907,7 @@ function ConfigModal({
             </AppButton>
           </div>
         </div>
+       </div>
       </div>
     </div>
   );
@@ -797,6 +961,7 @@ export function InstallGameServer({
   const [hytaleOptions, setHytaleOptions] = useState({ patchline: '', profileUuid: '' });
   const [showHytale, setShowHytale] = useState(false);
   const [showPalworldAdmin, setShowPalworldAdmin] = useState(false);
+  const [showProjectZomboid, setShowProjectZomboid] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
   const [mountRows, setMountRows] = useState<MountRow[]>([]);
   const [healthcheckFromCatalog, setHealthcheckFromCatalog] = useState<Record<string, unknown> | null>(null);
@@ -913,16 +1078,20 @@ export function InstallGameServer({
     setEnvRows(
       image.family === 'palworld'
         ? [...baseEnv, { key: 'PALWORLD_ADMIN_PASSWORD', value: generatePalworldAdminPassword() }]
-        : baseEnv
+        : image.family === 'project-zomboid'
+          ? [...baseEnv, { key: 'PZ_ADMIN_PASSWORD', value: generatePalworldAdminPassword() }]
+          : baseEnv
     );
     setConfigShowEnv(true);
     setConfigRequireEula(image.requiredEnvKeys.includes('EULA'));
     setShowHytale(image.supportsHytaleOptions);
     setHytaleOptions({ patchline: '', profileUuid: '' });
     setShowPalworldAdmin(image.family === 'palworld');
+    setShowProjectZomboid(image.family === 'project-zomboid');
     setConfigError(null);
+    const needsBackupMount = image.family === 'minecraft' || image.family === 'project-zomboid';
     setMountRows(
-      image.family === 'minecraft'
+      needsBackupMount
         ? [
             { key: 'data', containerPath: '/data' },
             { key: 'backup', containerPath: '/backups' },
@@ -1482,6 +1651,7 @@ export function InstallGameServer({
           hytaleOptions={showHytale ? hytaleOptions : undefined}
           setHytaleOptions={showHytale ? setHytaleOptions : undefined}
           showPalworldAdmin={showPalworldAdmin}
+          showProjectZomboidFields={showProjectZomboid}
           usedServerNames={usedServerNames}
           requireSteamCredentials={requireSteamCredentials || undefined}
           steamUsername={steamUsername}

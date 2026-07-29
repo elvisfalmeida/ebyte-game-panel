@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, FileCode2, Loader2, Package, RefreshCw, Trash2, Upload, X } from 'lucide-react';
 import { AppButton } from '../../src/ui/components';
 import { apiClient } from '../../utils/api';
+import { RestartToApplyNote } from './RestartToApplyNote';
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -22,6 +23,7 @@ type UploadItem = {
 
 export interface ModsSectionProps {
   serverId: number;
+  serverStatus?: string | null;
   kind: 'mods' | 'plugins';
   apiKind: 'hytale' | 'minecraft';
   canRead: boolean;
@@ -44,7 +46,7 @@ function formatFileSize(bytes: number): string {
 // ── ModsSection ────────────────────────────────────────────────────────────
 
 export function ModsSection({
-  serverId, kind, apiKind, canRead, canWrite,
+  serverId, serverStatus, kind, apiKind, canRead, canWrite,
   borderColor, contentBg, textPrimary, textSecondary,
 }: ModsSectionProps) {
   const [entries, setEntries] = useState<ModEntry[]>([]);
@@ -149,6 +151,7 @@ export function ModsSection({
 
   return (
     <div className="space-y-4">
+      <RestartToApplyNote serverStatus={serverStatus} />
       {/* Upload zone */}
       {canWrite && (
         <div
