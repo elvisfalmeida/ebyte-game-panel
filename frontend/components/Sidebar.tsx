@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type ReactNode } from 'react';
-import { KeyRound, Moon, MoreVertical, Power, Sun, X } from 'lucide-react';
+import { Globe2, KeyRound, Moon, MoreVertical, Power, Sun, X } from 'lucide-react';
 import { Icon, type IconName } from '@ovhcloud/ods-react';
 import { getAppVersion } from '../utils/appInfo';
 import type { AuthUser } from '../utils/permissions';
@@ -16,6 +16,7 @@ import {
 import { PanelUpdateModal } from './PanelUpdateModal';
 import { apiClient, type PanelUpdateCheck } from '../utils/api';
 import { useBodyScrollLock } from '../src/ui/utils/useBodyScrollLock';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -85,6 +86,7 @@ function UserMenuRow({
   onChangePassword,
   onLogout,
 }: UserMenuRowProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -114,8 +116,8 @@ function UserMenuRow({
         type="button"
         onClick={toggleTheme}
         className={`cursor-pointer shrink-0 rounded-md p-1 transition-colors ${isDark ? 'text-gray-400 hover:bg-gray-700 hover:text-gray-200' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
-        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-        title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        aria-label={isDark ? t('theme.light', 'Switch to light mode') : t('theme.dark', 'Switch to dark mode')}
+        title={isDark ? t('theme.light', 'Switch to light mode') : t('theme.dark', 'Switch to dark mode')}
       >
         {isDark ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
       </button>
@@ -130,10 +132,10 @@ function UserMenuRow({
           type="button"
           onClick={() => setOpen((v) => !v)}
           className={`cursor-pointer rounded-md p-1 transition-colors ${isDark ? 'text-gray-400 hover:bg-gray-700 hover:text-gray-200' : 'text-white/70 hover:bg-white/10 hover:text-white'}`}
-          aria-label="User menu"
+          aria-label={t('user.menu', 'User menu')}
           aria-haspopup="menu"
           aria-expanded={open}
-          title="User menu"
+          title={t('user.menu', 'User menu')}
         >
           <MoreVertical className="h-4 w-4" />
         </button>
@@ -145,7 +147,7 @@ function UserMenuRow({
               className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-medium transition-colors ${isDark ? 'text-[#eef4fa] hover:bg-[#1c2e47]' : 'text-gray-800 hover:bg-gray-100'}`}
             >
               <KeyRound className="h-4 w-4 text-[var(--color-cyan-400)]" />
-              Change password
+              {t('user.changePassword', 'Change password')}
             </button>
             <div className={`mx-2 border-t ${isDark ? 'border-white/10' : 'border-gray-200'}`} />
             <button
@@ -154,7 +156,7 @@ function UserMenuRow({
               className={`flex w-full items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-[#e86180] transition-colors ${isDark ? 'hover:bg-[#291126]' : 'hover:bg-red-50'}`}
             >
               <Power className="h-4 w-4" />
-              Log out
+              {t('user.logout', 'Log out')}
             </button>
           </div>
         )}
@@ -179,10 +181,11 @@ export function Sidebar({
   const [isPanelUpdateOpen, setIsPanelUpdateOpen] = useState(false);
   const [updateInfo, setUpdateInfo] = useState<PanelUpdateCheck | null>(null);
   const { theme, toggleTheme } = useTheme();
+  const { locale, setLocale, t } = useLanguage();
   const isDark = theme === 'dark';
   const layoutClasses = staticLayout ? 'relative h-full' : 'fixed left-0 top-0 h-screen';
   const widthClasses = staticLayout ? 'w-full' : 'w-52';
-  const currentUserLabel = currentUser?.username || 'Unknown user';
+  const currentUserLabel = currentUser?.username || t('user.unknown', 'Unknown user');
   const currentUserInitial = currentUserLabel.trim().charAt(0).toUpperCase() || '?';
   const appVersion = getAppVersion();
 
@@ -194,10 +197,10 @@ export function Sidebar({
   }, [currentUser?.isRoot]);
 
   const menuItems: Array<{ id: string; label: string; iconName: IconName; disabled?: boolean }> = [
-    { id: 'game-servers', label: 'Game Servers', iconName: 'game-controller-alt' },
-    { id: 'host-status', label: 'Host Status', iconName: 'analysis' },
-    { id: 'admin-users', label: 'User Administration', iconName: 'user', disabled: !canManageUsers },
-    { id: 'resources', label: 'Resources', iconName: 'book' },
+    { id: 'game-servers', label: t('nav.gameServers', 'Game Servers'), iconName: 'game-controller-alt' },
+    { id: 'host-status', label: t('nav.hostStatus', 'Host Status'), iconName: 'analysis' },
+    { id: 'admin-users', label: t('nav.users', 'User Administration'), iconName: 'user', disabled: !canManageUsers },
+    { id: 'resources', label: t('nav.resources', 'Resources'), iconName: 'book' },
   ];
 
   return (
@@ -261,6 +264,20 @@ export function Sidebar({
       </nav>
 
       <div className="gp-sidebar-bottom">
+      <div className="border-t border-white/10 px-3 py-2.5">
+        <label className="mb-1.5 flex items-center gap-2 text-xs font-medium text-gray-400">
+          <Globe2 className="h-3.5 w-3.5" />
+          {t('language.label', 'Language')}
+        </label>
+        <select
+          value={locale}
+          onChange={(event) => setLocale(event.target.value as 'en' | 'pt-BR')}
+          className="w-full rounded-md border border-white/15 bg-[#0f1a2b] px-2 py-1.5 text-xs text-gray-100 outline-none focus:border-[var(--color-cyan-400)]"
+        >
+          <option value="en">{t('language.english', 'English')}</option>
+          <option value="pt-BR">{t('language.portuguese', 'Português (Brasil)')}</option>
+        </select>
+      </div>
       <div className="border-y bg-transparent px-2 py-2.5 border-white/10">
         <UserMenuRow
           currentUserInitial={currentUserInitial}
@@ -274,7 +291,7 @@ export function Sidebar({
 
       <div className="px-3 py-3">
         <div className="flex flex-col items-center">
-          <h3 className="mb-4 text-xs font-medium text-gray-400">Follow Us</h3>
+          <h3 className="mb-4 text-xs font-medium text-gray-400">{t('nav.followUs', 'Follow Us')}</h3>
 
           <div className="flex items-center justify-center gap-6">
             {/* Reddit */}

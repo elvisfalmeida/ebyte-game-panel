@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
 import { apiClient } from '../utils/api';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface LoginProps {
   onLogin: () => void;
 }
 
 export function Login({ onLogin }: LoginProps) {
+  const { t } = useLanguage();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -18,9 +20,11 @@ export function Login({ onLogin }: LoginProps) {
   const isCredentialError =
     normalizedError.includes('invalid credential') ||
     normalizedError.includes('invalid username or password');
-  const errorTitle = isCredentialError ? 'Incorrect username or password' : 'Unable to sign in';
+  const errorTitle = isCredentialError
+    ? t('login.incorrectTitle', 'Incorrect username or password')
+    : t('login.unable', 'Unable to sign in');
   const errorMessage = isCredentialError
-    ? 'Please verify your login details and try again.'
+    ? t('login.incorrectMessage', 'Please verify your login details and try again.')
     : error;
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,7 +40,7 @@ export function Login({ onLogin }: LoginProps) {
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username || !password) {
-      setError('Please enter both username and password');
+      setError(t('login.required', 'Please enter both username and password'));
       return;
     }
     setLoading(true);
@@ -49,7 +53,7 @@ export function Login({ onLogin }: LoginProps) {
       }
       setError('Unexpected login response');
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Invalid username or password');
+      setError(err?.response?.data?.error || t('login.invalid', 'Invalid username or password'));
     } finally {
       setLoading(false);
     }
@@ -70,7 +74,7 @@ export function Login({ onLogin }: LoginProps) {
             style={{ filter: 'brightness(0) invert(1)' }}
           />
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            Sign in to manage your game servers
+            {t('login.tagline', 'Sign in to manage your game servers')}
           </p>
         </div>
 
@@ -98,7 +102,7 @@ export function Login({ onLogin }: LoginProps) {
               {/* Username */}
               <div className="space-y-1.5">
                 <label htmlFor="username" className="block text-sm font-medium" style={{ color: '#1e293b' }}>
-                  Username
+                  {t('login.username', 'Username')}
                 </label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -109,7 +113,7 @@ export function Login({ onLogin }: LoginProps) {
                     type="text"
                     value={username}
                     onChange={handleUsernameChange}
-                    placeholder="Enter your username"
+                    placeholder={t('login.usernamePlaceholder', 'Enter your username')}
                     autoComplete="username"
                     className="w-full rounded-lg py-2.5 pl-9 pr-4 text-sm transition-all focus:outline-none"
                     style={{
@@ -134,7 +138,7 @@ export function Login({ onLogin }: LoginProps) {
               {/* Password */}
               <div className="space-y-1.5">
                 <label htmlFor="password" className="block text-sm font-medium" style={{ color: '#1e293b' }}>
-                  Password
+                  {t('login.password', 'Password')}
                 </label>
                 <div className="relative">
                   <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -145,7 +149,7 @@ export function Login({ onLogin }: LoginProps) {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={handlePasswordChange}
-                    placeholder="Enter your password"
+                    placeholder={t('login.passwordPlaceholder', 'Enter your password')}
                     autoComplete="current-password"
                     className="w-full rounded-lg py-2.5 pl-9 pr-10 text-sm transition-all focus:outline-none"
                     style={{
@@ -196,7 +200,7 @@ export function Login({ onLogin }: LoginProps) {
                   if (!loading) e.currentTarget.style.background = 'linear-gradient(135deg, #003cbd 0%, #0050d7 100%)';
                 }}
               >
-                {loading ? 'Signing in…' : 'Sign In'}
+                {loading ? t('login.signingIn', 'Signing in…') : t('login.signIn', 'Sign In')}
               </button>
             </form>
           </div>
@@ -204,7 +208,7 @@ export function Login({ onLogin }: LoginProps) {
 
         {/* Footer */}
         <p className="mt-6 text-center text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          © 2026 OVHcloud. All rights reserved.
+          © 2026 OVHcloud. {t('login.rights', 'All rights reserved.')}
         </p>
       </div>
     </div>

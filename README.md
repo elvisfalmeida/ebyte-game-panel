@@ -1,5 +1,7 @@
 <div align="center">
 
+[English](README.md) · [Português (Brasil)](README.pt-BR.md)
+
 # 🎮 OVHcloud Game Panel
 
 ### Deploy and manage your game servers in minutes — from one clean, modern web interface.
@@ -103,7 +105,9 @@ Under the hood, a **React + Vite** frontend talks to a **Node.js** backend (Expr
 ## 📚 Documentation & support
 
 - 📋 [Changelog](CHANGELOG.md)
+- 🇧🇷 [Changelog em português](CHANGELOG.pt-BR.md)
 - 🌎 [Extended Palworld settings](docs/PALWORLD_SETTINGS.md)
+- 🇧🇷 [Documentação em português](README.pt-BR.md)
 - 📡 [Telemetry](docs/TELEMETRY.md)
 - 💬 [Contact OVHcloud support](https://www.ovhcloud.com/en/contact/)
 - 🎮 [OVHcloud Discord](https://discord.gg/ovhcloud)

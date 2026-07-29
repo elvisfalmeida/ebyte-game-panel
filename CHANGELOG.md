@@ -1,9 +1,18 @@
 # 📋 Changelog
 
+[English](CHANGELOG.md) · [Português (Brasil)](CHANGELOG.pt-BR.md)
+
 ## Unreleased
 
 ### ✨ Added
 
+- **Internationalization** — browser-language detection, a persistent language
+  selector, English fallback, and Brazilian Portuguese for the login,
+  navigation, server settings shell, and Palworld settings workflow.
+- **Localized Palworld help** — all dynamically discovered Palworld fields now
+  expose contextual PT-BR descriptions through the existing information icon.
+- **PT-BR documentation** — translated README, changelog, telemetry guide, and
+  extended Palworld settings guide with cross-language navigation.
 - **Extended Palworld settings GUI** — automatically discovers settings from the
   installed game version, exposes 115 editable world options with inferred
   field types, and adds search by label, key, or description.
