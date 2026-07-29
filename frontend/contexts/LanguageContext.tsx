@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { watchLegacyInterface } from '../utils/legacyTranslations';
 
 export type AppLocale = 'en' | 'pt-BR';
 
@@ -127,6 +128,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = locale === 'pt-BR' ? 'pt-BR' : 'en';
+    return watchLegacyInterface(locale === 'pt-BR');
   }, [locale]);
 
   const value = useMemo<LanguageContextValue>(() => ({

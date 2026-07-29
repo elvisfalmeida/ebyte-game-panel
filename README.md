@@ -2,15 +2,13 @@
 
 [English](README.md) · [Português (Brasil)](README.pt-BR.md)
 
-# 🎮 OVHcloud Game Panel
+# 🎮 Ebyte Game Panel
 
 ### Deploy and manage your game servers in minutes — from one clean, modern web interface.
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 ![Platform](https://img.shields.io/badge/Platform-Linux-1793D1)
-[![Made by OVHcloud](https://img.shields.io/badge/Made%20by-OVHcloud-000e9c)](https://www.ovhcloud.com/)
-
-<img src="docs/assets/game-panel.png" alt="OVHcloud Game Panel" width="900">
+<img src="frontend/public/ebyte-logo.png" alt="Ebyte Game Panel" width="220">
 
 </div>
 
@@ -109,6 +107,7 @@ Under the hood, a **React + Vite** frontend talks to a **Node.js** backend (Expr
 - 🌎 [Extended Palworld settings](docs/PALWORLD_SETTINGS.md)
 - 🇧🇷 [Documentação em português](README.pt-BR.md)
 - 📡 [Telemetry](docs/TELEMETRY.md)
+- 🎨 [Brand customization](docs/BRANDING.md)
 - 💬 [Contact OVHcloud support](https://www.ovhcloud.com/en/contact/)
 - 🎮 [OVHcloud Discord](https://discord.gg/ovhcloud)
 

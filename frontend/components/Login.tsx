@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
 import { apiClient } from '../utils/api';
 import { useLanguage } from '../contexts/LanguageContext';
+import { PANEL_LOGO_URL, PANEL_NAME } from '../utils/branding';
 
 interface LoginProps {
   onLogin: () => void;
@@ -68,11 +69,11 @@ export function Login({ onLogin }: LoginProps) {
         {/* Logo above card */}
         <div className="mb-8 flex flex-col items-center gap-3">
           <img
-            src="/OVHcloud_Game_Panel_Logo.png"
-            alt="OVHcloud Game Panel"
-            className="h-14 w-auto object-contain"
-            style={{ filter: 'brightness(0) invert(1)' }}
+            src={PANEL_LOGO_URL}
+            alt={PANEL_NAME}
+            className="h-24 w-24 object-contain"
           />
+          <h1 className="text-2xl font-bold text-white">{PANEL_NAME}</h1>
           <p className="text-sm" style={{ color: 'rgba(255,255,255,0.65)' }}>
             {t('login.tagline', 'Sign in to manage your game servers')}
           </p>
@@ -208,7 +209,7 @@ export function Login({ onLogin }: LoginProps) {
 
         {/* Footer */}
         <p className="mt-6 text-center text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
-          © 2026 OVHcloud. {t('login.rights', 'All rights reserved.')}
+          © 2026 {PANEL_NAME}. {t('login.rights', 'All rights reserved.')}
         </p>
       </div>
     </div>
