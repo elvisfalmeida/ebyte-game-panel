@@ -113,7 +113,7 @@ export function getConfig(): AppConfig {
         dockerSocket: envOrDefault('DOCKER_SOCKET', '/var/run/docker.sock'),
         composeProjectName: envOrDefault('COMPOSE_PROJECT_NAME', 'gamepanel'),
         updaterImage: envOrDefault('GAMEPANEL_UPDATER_IMAGE', gamePanelImage('gamepanel-updater')),
-        repositoryUrl: envOrDefault('GAMEPANEL_REPOSITORY_URL', 'https://github.com/ovh/game-panel.git'),
+        repositoryUrl: envOrDefault('GAMEPANEL_REPOSITORY_URL', 'https://github.com/elvisfalmeida/game-panel.git'),
         instanceId: process.env.APP_INSTANCE_ID?.trim() || null,
         instanceSecret: process.env.APP_INSTANCE_SECRET?.trim() || null,
         telemetryEnabled: boolEnv('TELEMETRY_ENABLED', true),

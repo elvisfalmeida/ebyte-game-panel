@@ -11,6 +11,7 @@ type PalworldSettingDefinition = {
     label: string;
     description: string;
     type: PalworldSettingType;
+    format?: 'quoted' | 'raw';
     options?: string[];
     min?: number;
     max?: number;
@@ -156,9 +157,15 @@ export const PALWORLD_SETTING_DEFINITIONS: PalworldSettingDefinition[] = [
     },
 ];
 
-const SETTING_DEFINITIONS_BY_KEY = new Map(
-    PALWORLD_SETTING_DEFINITIONS.map((definition) => [definition.key, definition])
-);
+// These values are managed by the container or must stay aligned with Docker port
+// mappings. Exposing them as ordinary world settings can make the panel lose
+// administrative access to the server.
+const PROTECTED_SETTING_KEYS = new Set([
+    'AdminPassword',
+    'PublicPort',
+    'RESTAPIEnabled',
+    'RESTAPIPort',
+]);
 
 function invalidInput(message: string): never {
     throw Object.assign(new Error(message), { statusCode: 400 });
@@ -251,6 +258,54 @@ function unquote(rawValue: string): string {
     return trimmed;
 }
 
+function settingLabel(key: string): string {
+    return key
+        .replace(/^b(?=[A-Z])/, '')
+        .replace(/_/g, ' ')
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+        .trim();
+}
+
+function inferSettingDefinition(key: string, rawValue: string): PalworldSettingDefinition {
+    const trimmed = rawValue.trim();
+    const description = `Advanced Palworld setting (${key}).`;
+
+    if (/^(true|false)$/i.test(trimmed)) {
+        return { key, label: settingLabel(key), description, type: 'boolean' };
+    }
+
+    if (/^[+-]?\d+$/.test(trimmed)) {
+        return { key, label: settingLabel(key), description, type: 'integer' };
+    }
+
+    if (/^[+-]?(?:\d+\.\d*|\d*\.\d+)$/.test(trimmed)) {
+        return { key, label: settingLabel(key), description, type: 'float' };
+    }
+
+    const quoted = trimmed.length >= 2 && trimmed.startsWith('"') && trimmed.endsWith('"');
+    return {
+        key,
+        label: settingLabel(key),
+        description,
+        type: 'string',
+        format: quoted ? 'quoted' : 'raw',
+    };
+}
+
+function buildSettingDefinitions(defaults: Map<string, string>): PalworldSettingDefinition[] {
+    const definitions = [...PALWORLD_SETTING_DEFINITIONS];
+    const known = new Set(definitions.map((definition) => definition.key));
+
+    for (const [key, rawValue] of defaults) {
+        if (known.has(key) || PROTECTED_SETTING_KEYS.has(key)) continue;
+        definitions.push(inferSettingDefinition(key, rawValue));
+        known.add(key);
+    }
+
+    return definitions;
+}
+
 function convertSettingValue(definition: PalworldSettingDefinition, rawValue: string): PalworldSettingValue | null {
     switch (definition.type) {
         case 'boolean': {
@@ -310,9 +365,18 @@ function serializeSettingValue(definition: PalworldSettingDefinition, value: unk
         }
         case 'string': {
             if (typeof value !== 'string') invalidInput(`${definition.key} must be a string`);
-            if (value.length > MAX_STRING_SETTING_LENGTH || /["(),\0\r\n]/.test(value)) {
+            if (value.length > MAX_STRING_SETTING_LENGTH || /["\0\r\n]/.test(value)) {
                 invalidInput(`${definition.key} contains invalid characters`);
             }
+            if (definition.format === 'raw') {
+                const atom = '[A-Za-z0-9_.:+/-]+';
+                const rawValuePattern = new RegExp(`^(?:${atom}(?:,${atom})*|\\(${atom}(?:,${atom})*\\))?$`);
+                if (!rawValuePattern.test(value.trim())) {
+                    invalidInput(`${definition.key} must be a value or a comma-separated list`);
+                }
+                return value.trim();
+            }
+            if (/[(),]/.test(value)) invalidInput(`${definition.key} contains invalid characters`);
             return `"${value}"`;
         }
     }
@@ -323,8 +387,9 @@ export async function listPalworldSettings(server: GameServerRow): Promise<Palwo
 
     const active = await readOptionSettingsValues(server.id, PALWORLD_SETTINGS_FILE_PATH, true);
     const defaults = await readOptionSettingsValues(server.id, PALWORLD_DEFAULT_SETTINGS_FILE_PATH, false);
+    const definitions = buildSettingDefinitions(defaults);
 
-    return PALWORLD_SETTING_DEFINITIONS
+    return definitions
         .map((definition) => {
             const rawValue = active.get(definition.key) ?? defaults.get(definition.key);
             if (rawValue === undefined) return null;
@@ -355,9 +420,13 @@ export async function patchPalworldSettings(
 
     const { keys, values } = parsePairs(found.inner);
     const updated: string[] = [];
+    const defaults = await readOptionSettingsValues(server.id, PALWORLD_DEFAULT_SETTINGS_FILE_PATH, false);
+    const definitionsByKey = new Map(
+        buildSettingDefinitions(defaults).map((definition) => [definition.key, definition])
+    );
 
     for (const [key, value] of entries) {
-        const definition = SETTING_DEFINITIONS_BY_KEY.get(key);
+        const definition = definitionsByKey.get(key);
         if (!definition) invalidInput(`Unsupported Palworld setting: ${key}`);
 
         const rawValue = serializeSettingValue(definition, value);

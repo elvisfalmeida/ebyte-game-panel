@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { AlertTriangle, Check, Info, Loader2, Save } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AlertTriangle, Check, Info, Loader2, Save, Search } from 'lucide-react';
 import { AppButton, AppInput, AppSelect, AppSlider, AppToggle } from '../../src/ui/components';
 import { RestartToApplyNote } from './RestartToApplyNote';
 
@@ -118,12 +118,20 @@ export function GameSettingsSection({
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
   const [openHelpKey, setOpenHelpKey] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
   const loaded = useRef(false);
 
   const isRunning = serverStatus === 'running';
   // Editing is blocked while running only for games that require a stopped server.
   const editingLocked = editableOnlyWhenStopped && isRunning;
   const canEdit = canWrite && !editingLocked;
+  const filteredFields = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return fields;
+    return fields.filter((field) =>
+      `${field.label} ${field.key} ${field.description}`.toLowerCase().includes(normalized)
+    );
+  }, [fields, query]);
 
   const loadSettings = useCallback(async () => {
     if (!canRead) return;
@@ -203,8 +211,28 @@ export function GameSettingsSection({
       )}
       {!loading && fields.length > 0 && (
         <>
+          {fields.length > 24 && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="relative w-full sm:max-w-md">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                <AppInput
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Search settings by name or key…"
+                  className="w-full pl-9 pr-3 py-2 bg-gp-surface-elevated border border-gray-600 rounded text-white"
+                />
+              </div>
+              <span className={`text-xs ${textSecondary}`}>
+                Showing {filteredFields.length} of {fields.length}
+              </span>
+            </div>
+          )}
+          {filteredFields.length === 0 && (
+            <p className={`text-sm ${textSecondary}`}>No settings match your search.</p>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {fields.map((field) => (
+            {filteredFields.map((field) => (
               <div key={field.key} className={`rounded-lg border ${borderColor} bg-gp-surface-base/45 p-3 sm:p-4 flex flex-col justify-center`}>
                 <div className={`grid grid-cols-1 items-center gap-3 sm:gap-4 w-full ${field.type === 'boolean' ? 'sm:grid-cols-[1fr_auto]' : 'sm:grid-cols-[minmax(185px,1.15fr)_minmax(0,1.1fr)]'}`}>
                   <div className="relative" data-setting-help>
