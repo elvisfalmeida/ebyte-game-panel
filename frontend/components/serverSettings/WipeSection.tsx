@@ -3,6 +3,7 @@ import { AlertTriangle, CheckCircle2, Trash2 } from 'lucide-react';
 import { AppButton } from '../../src/ui/components';
 import { ConfirmationModal } from '../ConfirmationModal';
 import type { WipeMode, WipeModeInfo } from './wipeModes';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 export type { WipeMode, WipeModeInfo } from './wipeModes';
 
@@ -35,6 +36,23 @@ const TONE = {
   },
 } as const;
 
+type Translator = (key: string, fallback?: string, values?: Record<string, string | number>) => string;
+
+function translateWipeItem(item: string, t: Translator): string {
+  if (item.startsWith('Everything on disk:')) return t('wipe.item.everything', item);
+  if (item === 'All backups') return t('wipe.item.allBackups', item);
+  if (item === 'World save & player data') return t('wipe.item.worldPlayers', item);
+  if (item.startsWith('World(s) & player data')) return t('wipe.item.worldsPlayers', item);
+  if (item.startsWith('Universe (')) return t('wipe.item.universe', item);
+  if (item.startsWith('Server config:')) return t('wipe.item.serverConfig', item);
+  if (item.startsWith('Server config (')) return t('wipe.item.serverSettings', item);
+  if (item.includes('Whitelist') || item.includes('whitelist')) return t('wipe.item.whitelistBans', item);
+  if (item.includes('Plugins / mods')) return t('wipe.item.pluginsMods', item);
+  if (item === 'Mods' || item === 'Installed mods') return t('wipe.item.mods', item);
+  if (item === 'Backups') return t('wipe.item.backups', item);
+  return item;
+}
+
 // Generic, game-agnostic "wipe" panel. Modes are supplied pre-filtered by the caller
 // (supported by the game + permitted). Every mode is destructive with no automatic
 // backup, so each is gated behind a type-to-confirm modal and requires the server to
@@ -50,6 +68,7 @@ export function WipeSection({
   textPrimary,
   textSecondary,
 }: WipeSectionProps) {
+  const { t } = useLanguage();
   const [pending, setPending] = useState<WipeModeInfo | null>(null);
   const [result, setResult] = useState<{ mode: string; removed: string[] } | null>(null);
 
@@ -64,19 +83,19 @@ export function WipeSection({
       onReinstallStarted?.();
       return;
     }
-    setResult({ mode: mode.label, removed: data.removed ?? [] });
+    setResult({ mode: t(`wipe.${mode.id}`, mode.label), removed: data.removed ?? [] });
   };
 
   if (modes.length === 0) return null;
 
   return (
     <div className={`${contentBg} border ${borderColor} rounded-lg p-4 space-y-3`}>
-      <h4 className={`text-base font-semibold ${textPrimary}`}>Wipe</h4>
+      <h4 className={`text-base font-semibold ${textPrimary}`}>{t('wipe.title', 'Wipe')}</h4>
 
       {isRunning && (
         <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-300">
           <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-          <span>The server must be stopped to wipe it. After a wipe the server stays stopped and regenerates on the next start.</span>
+          <span>{t('wipe.serverRunning', 'The server must be stopped to wipe it. After a wipe the server stays stopped and regenerates on the next start.')}</span>
         </div>
       )}
 
@@ -84,8 +103,10 @@ export function WipeSection({
         <div className="flex items-start gap-2 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-sm text-emerald-300">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <span>
-            {result.mode} complete{result.removed.length > 0 ? ` (${result.removed.length} path${result.removed.length > 1 ? 's' : ''} removed)` : ''}.
-            The server is stopped — start it when ready to regenerate a fresh world.
+            {result.removed.length > 0
+              ? t('wipe.completePaths', `${result.mode} complete (${result.removed.length} paths removed).`, { mode: result.mode, count: result.removed.length })
+              : t('wipe.complete', `${result.mode} complete.`, { mode: result.mode })}{' '}
+            {t('wipe.startFresh', 'The server is stopped — start it when ready to regenerate a fresh world.')}
           </span>
         </div>
       )}
@@ -97,20 +118,20 @@ export function WipeSection({
             <div key={mode.id} className={`rounded-xl border ${tone.card} p-3.5`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className={`text-sm font-semibold ${textPrimary}`}>{mode.label}</p>
-                  <p className={`mt-0.5 text-xs ${textSecondary}`}>{mode.description}</p>
+                  <p className={`text-sm font-semibold ${textPrimary}`}>{t(`wipe.${mode.id}`, mode.label)}</p>
+                  <p className={`mt-0.5 text-xs ${textSecondary}`}>{t(`wipe.${mode.id}.description`, mode.description)}</p>
 
                   <div className="mt-2 grid gap-x-4 gap-y-1 text-xs sm:grid-cols-2">
                     <div>
-                      <span className="font-semibold text-red-400">Deleted</span>
+                      <span className="font-semibold text-red-400">{t('wipe.deleted', 'Deleted')}</span>
                       <ul className="mt-0.5 list-disc space-y-0.5 pl-4 text-gray-400">
-                        {mode.deleted.map((item) => <li key={item}>{item}</li>)}
+                        {mode.deleted.map((item) => <li key={item}>{translateWipeItem(item, t)}</li>)}
                       </ul>
                     </div>
                     <div>
-                      <span className="font-semibold text-emerald-400">Kept</span>
+                      <span className="font-semibold text-emerald-400">{t('wipe.kept', 'Kept')}</span>
                       <ul className="mt-0.5 list-disc space-y-0.5 pl-4 text-gray-400">
-                        {mode.kept.map((item) => <li key={item}>{item}</li>)}
+                        {mode.kept.map((item) => <li key={item}>{translateWipeItem(item, t)}</li>)}
                       </ul>
                     </div>
                   </div>
@@ -124,7 +145,7 @@ export function WipeSection({
                     className={`inline-flex flex-shrink-0 items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-40 ${tone.button}`}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
-                    {mode.label}
+                    {t(`wipe.${mode.id}`, mode.label)}
                   </AppButton>
                 )}
               </div>
@@ -135,11 +156,11 @@ export function WipeSection({
 
       <ConfirmationModal
         isOpen={pending !== null}
-        title={pending ? `${pending.label}?` : ''}
-        message={pending?.confirmMessage ?? ''}
+        title={pending ? `${t(`wipe.${pending.id}`, pending.label)}?` : ''}
+        message={pending ? t(`wipe.${pending.id}.confirm`, pending.confirmMessage) : ''}
         icon="danger"
-        requiredText={pending ? pending.label.toUpperCase() : undefined}
-        confirmText={pending?.label ?? 'Wipe'}
+        requiredText={pending ? t(`wipe.${pending.id}`, pending.label).toUpperCase() : undefined}
+        confirmText={pending ? t(`wipe.${pending.id}`, pending.label) : t('wipe.title', 'Wipe')}
         confirmButtonClass={pending ? TONE[pending.tone].confirmButton : undefined}
         onConfirm={handleConfirm}
         onClose={() => setPending(null)}

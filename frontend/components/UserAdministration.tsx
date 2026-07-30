@@ -21,6 +21,7 @@ import {
   splitPermissions,
   stripWildcard,
 } from './userAdministration/utils';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface UserAdministrationProps {
   servers: Array<{ id: string; name: string; provider?: string; catalogId?: string }>;
@@ -53,6 +54,7 @@ export function UserAdministration({
   currentUserId = null,
   canManageUsers = true,
 }: UserAdministrationProps) {
+  const { t } = useLanguage();
   const [users, setUsers] = useState<PanelUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState<string | null>(null);
@@ -130,7 +132,7 @@ export function UserAdministration({
     } catch (error: any) {
       setUsers([]);
       setUsersError(
-        apiError(error, 'Failed to load users.')
+        apiError(error, t('users.loadError', 'Failed to load users.'))
       );
     } finally {
       setUsersLoading(false);
@@ -146,7 +148,7 @@ export function UserAdministration({
       setMembers(res.members);
     } catch (error: any) {
       setMembers([]);
-      setMembersError(apiError(error, 'Failed to load server permissions.'));
+      setMembersError(apiError(error, t('users.permissionsLoadError', 'Failed to load server permissions.')));
     } finally {
       setMembersLoading(false);
     }
@@ -196,20 +198,20 @@ export function UserAdministration({
 
   const handleCreateUser = async () => {
     if (userLimitReached) {
-      setCreateError(`User limit reached (${MAX_USERS} max).`);
+      setCreateError(t('users.limit', `User limit reached (${MAX_USERS} max).`, { count: MAX_USERS }));
       return;
     }
     const usernameValue = createUsername.trim();
     if (!usernameValue || !createPassword || !createPasswordConfirm) {
-      setCreateError('Username and password are required.');
+      setCreateError(t('users.required', 'Username and password are required.'));
       return;
     }
     if (createPassword.length < 8) {
-      setCreateError('Password must be at least 8 characters.');
+      setCreateError(t('users.passwordLength', 'Password must be at least 8 characters.'));
       return;
     }
     if (createPassword !== createPasswordConfirm) {
-      setCreateError('Password confirmation does not match.');
+      setCreateError(t('users.passwordMismatch', 'Password confirmation does not match.'));
       return;
     }
     setCreateLoading(true);
@@ -228,10 +230,12 @@ export function UserAdministration({
       }
       setFeedback({
         type: 'success',
-        text: `User ${res.user?.username || usernameValue} created successfully.`,
+        text: t('users.created', `User ${res.user?.username || usernameValue} created successfully.`, {
+          username: res.user?.username || usernameValue,
+        }),
       });
     } catch (error: any) {
-      setCreateError(apiError(error, 'Failed to create user.'));
+      setCreateError(apiError(error, t('users.createError', 'Failed to create user.')));
     } finally {
       setCreateLoading(false);
     }
@@ -246,28 +250,28 @@ export function UserAdministration({
   const handleSaveEdit = async () => {
     if (!selectedUser) return;
     if (selectedUser.isRoot) {
-      setEditError('Super Admin account cannot be edited here.');
+      setEditError(t('users.rootLocked', 'Super Admin account cannot be edited here.'));
       return;
     }
 
     const trimmedUsername = username.trim();
     if (!trimmedUsername) {
-      setEditError('Username is required.');
+      setEditError(t('users.usernameRequired', 'Username is required.'));
       return;
     }
 
     const shouldResetPassword = newPassword.length > 0 || newPasswordConfirm.length > 0;
     if (shouldResetPassword) {
       if (newPassword.length < 8) {
-        setEditError('Password must be at least 8 characters.');
+        setEditError(t('users.passwordLength', 'Password must be at least 8 characters.'));
         return;
       }
       if (!newPasswordConfirm) {
-        setEditError('Please confirm the new password.');
+        setEditError(t('users.confirmNewPassword', 'Please confirm the new password.'));
         return;
       }
       if (newPassword !== newPasswordConfirm) {
-        setEditError('Password confirmation does not match.');
+        setEditError(t('users.passwordMismatch', 'Password confirmation does not match.'));
         return;
       }
     }
@@ -311,9 +315,9 @@ export function UserAdministration({
       setNewPassword('');
       setNewPasswordConfirm('');
       setEditModalOpen(false);
-      setFeedback({ type: 'success', text: 'User changes saved successfully.' });
+      setFeedback({ type: 'success', text: t('users.saved', 'User changes saved successfully.') });
     } catch (error: any) {
-      setEditError(apiError(error, 'Failed to save user changes.'));
+      setEditError(apiError(error, t('users.saveError', 'Failed to save user changes.')));
     } finally {
       setSaveEditLoading(false);
     }
@@ -321,7 +325,7 @@ export function UserAdministration({
 
   const requestDeleteUser = (user: PanelUser) => {
     if (user.isRoot) {
-      setFeedback({ type: 'error', text: 'Super Admin account cannot be deleted.' });
+      setFeedback({ type: 'error', text: t('users.rootLocked', 'Super Admin account cannot be deleted.') });
       return;
     }
     setSelectedUserId(user.id);
@@ -344,10 +348,10 @@ export function UserAdministration({
       await loadUsers();
       if (selectedServerId) await loadMembers(selectedServerId);
       setEditModalOpen(false);
-      setFeedback({ type: 'success', text: `User ${usernameToDelete} deleted.` });
+      setFeedback({ type: 'success', text: t('users.deleted', `User ${usernameToDelete} deleted.`, { username: usernameToDelete }) });
     } catch (error: any) {
       // Rethrow so ConfirmationModal surfaces the error inline and stays open.
-      throw new Error(apiError(error, 'Failed to delete user.'));
+      throw new Error(apiError(error, t('users.deleteError', 'Failed to delete user.')));
     } finally {
       setDeleteUserLoading(false);
     }
@@ -375,7 +379,7 @@ export function UserAdministration({
 
   const openUserEdit = (user: PanelUser) => {
     if (user.isRoot) {
-      setFeedback({ type: 'error', text: 'Super Admin account cannot be edited here.' });
+      setFeedback({ type: 'error', text: t('users.rootLocked', 'Super Admin account cannot be edited here.') });
       return;
     }
     setEditError(null);
@@ -432,7 +436,7 @@ export function UserAdministration({
                 className="inline-flex items-center gap-2 rounded bg-red-600 px-3 py-2 text-sm text-white hover:bg-red-500"
               >
                 <RefreshCw className="h-4 w-4" />
-                Retry
+                {t('users.retry', 'Retry')}
               </AppButton>
             </div>
           </div>
@@ -511,13 +515,13 @@ export function UserAdministration({
               setDeleteUserConfirm({ open: false });
             }}
             onConfirm={confirmDeleteUser}
-            title="Delete User"
+            title={t('users.deleteTitle', 'Delete User')}
             message={
               deleteUserConfirm.open
-                ? `Delete "${deleteUserConfirm.username}" now? This action permanently deletes the account and cannot be undone.`
-                : 'This action permanently deletes the account and cannot be undone.'
+                ? t('users.deleteMessage', `Delete "${deleteUserConfirm.username}" now? This action permanently deletes the account and cannot be undone.`, { username: deleteUserConfirm.username })
+                : t('users.deleteMessageGeneric', 'This action permanently deletes the account and cannot be undone.')
             }
-            confirmText="Delete"
+            confirmText={t('common.delete', 'Delete')}
             confirmButtonClass="bg-red-600 hover:bg-red-700"
             requiredText={deleteUserConfirm.open ? deleteUserConfirm.username : undefined}
           />
@@ -539,6 +543,5 @@ export function UserAdministration({
     </div>
   );
 }
-
 
 

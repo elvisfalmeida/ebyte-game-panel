@@ -80,7 +80,9 @@ barra lateral. A escolha fica salva no navegador.
 Inglês é sempre usado como fallback quando uma tradução ainda não existe.
 As principais telas de gerenciamento do servidor usam chaves estruturadas de
 tradução. A camada de compatibilidade permanece apenas para trechos legados e
-conteúdo inserido dinamicamente.
+conteúdo inserido dinamicamente. A cobertura inclui Limpeza, tarefas agendadas,
+terminal, backups, arquivos, contêiner, Administração de usuários, permissões e
+Recursos.
 
 ## 🏗️ Arquitetura
 
