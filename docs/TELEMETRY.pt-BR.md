@@ -2,7 +2,7 @@
 
 [English](TELEMETRY.md) · [Português (Brasil)](TELEMETRY.pt-BR.md)
 
-O OVHcloud Game Panel envia telemetria anônima por padrão. Esses dados ajudam o
+O Ebyte Game Panel envia telemetria anônima por padrão. Esses dados ajudam o
 projeto original a entender quais jogos e versões são mais utilizados.
 
 ## Dados enviados na instalação ou atualização

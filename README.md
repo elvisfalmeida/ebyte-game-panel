@@ -14,7 +14,7 @@
 
 <br>
 
-OVHcloud Game Panel is an **open-source, self-hosted** control panel to deploy, run, and monitor your game servers — **without ever touching the command line**. Spin up a Minecraft, Counter-Strike 2, Hytale, Palworld, or Project Zomboid server in a few clicks, then manage its files, backups, player access, and performance from a single modern dashboard. 🚀
+Ebyte Game Panel is an **open-source, self-hosted** control panel to deploy, run, and monitor your game servers — **without ever touching the command line**. Spin up a Minecraft, Counter-Strike 2, Hytale, Palworld, or Project Zomboid server in a few clicks, then manage its files, backups, player access, and performance from a single modern dashboard. 🚀
 
 > This fork extends Palworld support with a searchable GUI for nearly every setting
 > exposed by the installed game version. See [Palworld settings](docs/PALWORLD_SETTINGS.md).
@@ -101,7 +101,10 @@ administration, permission labels, and Resources. English is the fallback.
 See [Time zones](docs/TIMEZONE.md) to configure console and game-container
 timestamps.
 
-> 📡 OVHcloud Game Panel sends usage telemetry by default. You can disable it at install with `--telemetry-disabled`. See [docs/TELEMETRY.md](docs/TELEMETRY.md).
+See [Panel content](docs/PANEL_CONTENT.md) to customize news, sidebar links,
+Resources, and remote content sources.
+
+> 📡 Ebyte Game Panel sends usage telemetry by default. You can disable it at install with `--telemetry-disabled`. See [docs/TELEMETRY.md](docs/TELEMETRY.md).
 
 ## 🏗️ Architecture
 
@@ -120,9 +123,16 @@ Under the hood, a **React + Vite** frontend talks to a **Node.js** backend (Expr
 - 🇧🇷 [Documentação em português](README.pt-BR.md)
 - 📡 [Telemetry](docs/TELEMETRY.md)
 - 🎨 [Brand customization](docs/BRANDING.md)
-- 💬 [Contact OVHcloud support](https://www.ovhcloud.com/en/contact/)
-- 🎮 [OVHcloud Discord](https://discord.gg/ovhcloud)
+- 📰 [Panel content](docs/PANEL_CONTENT.md)
 
 ## 📄 License
 
 Licensed under the **Apache License 2.0** — see [LICENSE](LICENSE).
+
+## Credits
+
+Ebyte Game Panel is derived from the Apache-2.0-licensed
+[OVHcloud Game Panel](https://github.com/ovh/game-panel). OVHcloud and LinuxGSM
+remain credited for the original project, provider integrations, and related
+upstream work. The Ebyte name and customization do not imply OVHcloud
+endorsement.

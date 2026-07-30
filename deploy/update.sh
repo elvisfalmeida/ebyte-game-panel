@@ -80,6 +80,11 @@ ensure_runtime_env_defaults() {
   append_env_if_missing 'GAMEPANEL_APP_ROOT' "$APP_ROOT"
   append_env_if_missing 'GAMEPANEL_REPOSITORY_URL' "https://github.com/elvisfalmeida/game-panel.git"
   append_env_if_missing 'VITE_LOG_TIME_ZONE' "UTC"
+  if [[ ! -f "$DEPLOY_DIR/panel-content.json" ]]; then
+    cp "$APP_ROOT/frontend/public/panel-content.json" "$DEPLOY_DIR/panel-content.json"
+    chown root:"$APP_GROUP" "$DEPLOY_DIR/panel-content.json"
+    chmod 0660 "$DEPLOY_DIR/panel-content.json"
+  fi
 }
 
 wait_for_stack() {
@@ -122,6 +127,7 @@ main() {
   require_local_source_tree "$LOCAL_SOURCE_ROOT"
 
   APP_ROOT="${GP_APP_ROOT:-/opt/gamepanel}"
+  APP_GROUP="${GP_APP_GROUP:-gamepanel}"
   COMPOSE_PROJECT_NAME="${GP_COMPOSE_PROJECT_NAME:-gamepanel}"
 
   APP_SOURCE_DIR="${APP_ROOT}/app"

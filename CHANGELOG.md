@@ -6,6 +6,9 @@
 
 ### ✨ Added
 
+- **Runtime panel content** — news, sidebar links, and Resources can use local
+  JSON content or independent remote sources without relying on the OVHcloud
+  catalog.
 - **Ebyte branding** — original emblem, configurable name and logo, favicon,
   login, sidebar, mobile header, and browser title.
 - **Legacy translation bridge** — translates remaining settings, user
@@ -87,7 +90,7 @@ Adds **Palworld** support, improves live logs and server status tracking, and re
 
 ## v1.0.0 — 2026-06-30
 
-Stable release of OVHcloud Game Panel with a broader provider model, curated OVHcloud Docker images, improved file management, scheduled tasks, and container configuration workflows.
+Stable release of Ebyte Game Panel with a broader provider model, curated OVHcloud Docker images, improved file management, scheduled tasks, and container configuration workflows.
 
 ### ✨ Added
 
@@ -105,7 +108,7 @@ Stable release of OVHcloud Game Panel with a broader provider model, curated OVH
 
 ### 🔧 Changed
 
-- OVHcloud Game Panel is no longer limited to LinuxGSM workflows.
+- Ebyte Game Panel is no longer limited to LinuxGSM workflows.
 - Server configuration now stores provider, image, ports, mounts, environment, health check, resource limit, and runtime metadata.
 - Server lifecycle actions are handled through Docker and provider-specific hooks instead of a LinuxGSM-only command model.
 - Backup scheduling is handled through panel scheduled tasks instead of the beta LinuxGSM cron workflow.
@@ -124,11 +127,11 @@ Stable release of OVHcloud Game Panel with a broader provider model, curated OVH
 ### ⚠️ Upgrade Notes
 
 - Data migration from `v1.0.0-beta.1` is not available in this release.
-- A fresh OVHcloud Game Panel installation is required to use `v1.0.0`.
+- A fresh Ebyte Game Panel installation is required to use `v1.0.0`.
 
 ## 🎉 v1.0.0-beta.1 — 2026-04-21
 
-Initial public beta of OVHcloud Game Panel.
+Initial public beta of Ebyte Game Panel.
 
 ### ✨ Added
 

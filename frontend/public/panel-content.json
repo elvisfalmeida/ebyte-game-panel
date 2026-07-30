@@ -1,0 +1,52 @@
+{
+  "news": {
+    "enabled": true,
+    "source": "local",
+    "rotationSeconds": 15,
+    "items": [
+      {
+        "id": 1,
+        "title": "Bem-vindo ao Ebyte Game Panel",
+        "description": "Gerencie seus servidores, backups, arquivos e tarefas em um único lugar.",
+        "date": 1785380400000,
+        "type": "announcement",
+        "iconKey": "news",
+        "position": 1
+      }
+    ]
+  },
+  "social": {
+    "enabled": true,
+    "title": "Projeto",
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/elvisfalmeida/game-panel",
+        "icon": "github"
+      }
+    ]
+  },
+  "resources": {
+    "source": "local",
+    "items": [
+      {
+        "id": 1,
+        "title": "Documentação do Ebyte Game Panel",
+        "description": "Guias de configuração, personalização, fusos horários e recursos do painel.",
+        "url": "https://github.com/elvisfalmeida/game-panel#readme",
+        "category": "Documentação",
+        "mediaType": "article",
+        "gameKey": null
+      },
+      {
+        "id": 2,
+        "title": "Configurações do Palworld",
+        "description": "Referência das configurações ampliadas do Palworld disponíveis na interface.",
+        "url": "https://github.com/elvisfalmeida/game-panel/blob/main/docs/PALWORLD_SETTINGS.pt-BR.md",
+        "category": "Palworld",
+        "mediaType": "article",
+        "gameKey": "palworld"
+      }
+    ]
+  }
+}

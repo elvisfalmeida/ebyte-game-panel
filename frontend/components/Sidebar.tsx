@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type ReactNode } from 'react';
-import { Globe2, KeyRound, Moon, MoreVertical, Power, Sun, X } from 'lucide-react';
+import { Github, Globe2, Instagram, KeyRound, Linkedin, MessageCircle, Moon, MoreVertical, Power, Sun, X, Youtube } from 'lucide-react';
 import { Icon, type IconName } from '@ovhcloud/ods-react';
 import { getAppVersion } from '../utils/appInfo';
 import type { AuthUser } from '../utils/permissions';
@@ -18,6 +18,7 @@ import { apiClient, type PanelUpdateCheck } from '../utils/api';
 import { useBodyScrollLock } from '../src/ui/utils/useBodyScrollLock';
 import { useLanguage } from '../contexts/LanguageContext';
 import { PANEL_LOGO_URL, PANEL_NAME } from '../utils/branding';
+import { usePanelContent, type SocialLink } from '../contexts/PanelContentContext';
 
 interface SidebarProps {
   activeTab: string;
@@ -27,6 +28,16 @@ interface SidebarProps {
   canManageUsers?: boolean;
   staticLayout?: boolean;
   currentUser?: AuthUser | null;
+}
+
+function SocialIcon({ icon }: { icon?: SocialLink['icon'] }) {
+  const className = 'h-5 w-5';
+  if (icon === 'github') return <Github className={className} />;
+  if (icon === 'discord') return <MessageCircle className={className} />;
+  if (icon === 'youtube') return <Youtube className={className} />;
+  if (icon === 'instagram') return <Instagram className={className} />;
+  if (icon === 'linkedin') return <Linkedin className={className} />;
+  return <Globe2 className={className} />;
 }
 
 function LegalSection({
@@ -183,6 +194,7 @@ export function Sidebar({
   const [updateInfo, setUpdateInfo] = useState<PanelUpdateCheck | null>(null);
   const { theme, toggleTheme } = useTheme();
   const { locale, setLocale, t } = useLanguage();
+  const { social } = usePanelContent();
   const isDark = theme === 'dark';
   const layoutClasses = staticLayout ? 'relative h-full' : 'fixed left-0 top-0 h-screen';
   const widthClasses = staticLayout ? 'w-full' : 'w-52';
@@ -291,11 +303,30 @@ export function Sidebar({
         />
       </div>
 
+      {social.enabled && social.links.length > 0 && (
       <div className="px-3 py-3">
         <div className="flex flex-col items-center">
-          <h3 className="mb-4 text-xs font-medium text-gray-400">{t('nav.followUs', 'Follow Us')}</h3>
+          <h3 className="mb-4 text-xs font-medium text-gray-400">
+            {social.title || t('nav.followUs', 'Follow Us')}
+          </h3>
 
-          <div className="flex items-center justify-center gap-6">
+          <div className="flex flex-wrap items-center justify-center gap-5">
+            {social.links.map((link) => (
+              <a
+                key={`${link.label}-${link.url}`}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center text-gray-400 transition-colors hover:text-[var(--color-cyan-400)]"
+                aria-label={link.label}
+                title={link.label}
+              >
+                <SocialIcon icon={link.icon} />
+              </a>
+            ))}
+          </div>
+
+          <div className="hidden">
             {/* Reddit */}
             <a href="https://www.reddit.com/r/OVHcloud/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center" aria-label="Reddit">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-5 w-5" aria-hidden="true">
@@ -326,9 +357,10 @@ export function Sidebar({
           </div>
         </div>
       </div>
+      )}
 
       <div className="border-t px-3 py-3 border-white/10">
-        <div className="flex justify-center">
+        <div className="hidden">
           <a
             href="https://fr.trustpilot.com/review/ovhcloud.com"
             target="_blank"
@@ -352,13 +384,13 @@ export function Sidebar({
               className="relative rounded-sm px-1 text-[10px] transition-colors text-gray-500 hover:text-gray-300"
               title={updateInfo?.updateAvailable ? `Update available: v${updateInfo.latestVersion}` : 'Panel update'}
             >
-              Game Panel v{appVersion}
+              {PANEL_NAME} v{appVersion}
               {updateInfo?.updateAvailable && (
                 <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-orange-400 ring-2 ring-[#000e9c] dark:ring-[#111827]" />
               )}
             </button>
           ) : (
-            <span>Game Panel v{appVersion}</span>
+            <span>{PANEL_NAME} v{appVersion}</span>
           )}
           <button
             type="button"

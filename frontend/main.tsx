@@ -11,6 +11,7 @@ import './src/ui/theme/ods-light.css';
 import './styles/globals.css';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { applyPanelBranding } from './utils/branding';
+import { PanelContentProvider } from './contexts/PanelContentContext';
 
 applyPanelBranding();
 
@@ -18,8 +19,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
       <LanguageProvider>
-        <RealtimeStatusBanner />
-        <App />
+        <PanelContentProvider>
+          <RealtimeStatusBanner />
+          <App />
+        </PanelContentProvider>
       </LanguageProvider>
     </ErrorBoundary>
   </React.StrictMode>

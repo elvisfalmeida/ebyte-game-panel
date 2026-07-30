@@ -3,11 +3,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { apiClient, type CatalogResourceItem } from '../utils/api';
 import { AppButton, AppCard, AppInput, AppSelect } from '../src/ui/components';
 import { useLanguage } from '../contexts/LanguageContext';
+import { usePanelContent } from '../contexts/PanelContentContext';
 
 const MAX_VISIBLE_RESOURCES = 9;
 
 export function Resources() {
   const { t } = useLanguage();
+  const { resources: resourcesConfig } = usePanelContent();
   const [resources, setResources] = useState<CatalogResourceItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -30,7 +32,16 @@ export function Resources() {
       setIsLoading(true);
       setLoadError(null);
       try {
-        const response = await apiClient.getResources({ limit: 200 });
+        if (resourcesConfig.source === 'local') {
+          if (!cancelled) setResources(resourcesConfig.items);
+          return;
+        }
+        const response = resourcesConfig.remoteUrl
+          ? await fetch(`${resourcesConfig.remoteUrl.replace(/\/$/, '')}/resources?limit=200`).then((result) => {
+              if (!result.ok) throw new Error(`Resources source returned ${result.status}`);
+              return result.json() as Promise<{ resources: CatalogResourceItem[] }>;
+            })
+          : await apiClient.getResources({ limit: 200 });
         if (cancelled) return;
         setResources(Array.isArray(response.resources) ? response.resources : []);
       } catch (error) {
@@ -51,7 +62,7 @@ export function Resources() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [resourcesConfig.source, resourcesConfig.remoteUrl, resourcesConfig.items]);
 
   useEffect(() => {
     setShowAll(false);
