@@ -11,8 +11,9 @@ administrativas.
 
 O editor permite alternar fontes locais e remotas, adicionar e remover itens,
 configurar o banner e publicar as alterações sem acessar o servidor. O backend
-valida URLs, limites e campos obrigatórios e substitui o arquivo de forma
-atômica para evitar conteúdo parcialmente gravado.
+valida URLs, limites e campos obrigatórios antes de gravar. A substituição é
+atômica quando o armazenamento permite; em bind mounts do Docker, o conteúdo
+completo já validado é gravado diretamente por limitação do sistema de arquivos.
 
 O Ebyte Game Panel lê notícias, links sociais e Recursos de:
 

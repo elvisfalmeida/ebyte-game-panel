@@ -8,7 +8,8 @@
 
 - **Editor visual de conteúdo** — o usuário root pode publicar notícias, links
   sociais, recursos e tutoriais pela interface, com fontes locais/remotas,
-  validação no backend, gravação atômica e atualização imediata da tela.
+  validação no backend, gravação compatível com bind mounts e atualização
+  imediata da tela.
 - **Produto independente** — português brasileiro passa a ser o idioma principal
   do README, o repositório oficial passa a ser `ebyte-game-panel` e os links de
   instalação, atualização, rollback e conteúdo acompanham a nova identidade.

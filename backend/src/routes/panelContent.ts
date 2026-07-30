@@ -110,8 +110,17 @@ router.put('/', async (req: AuthenticatedRequest, res: Response) => {
     const target = getConfig().panelContentFile;
     const temporary = `${target}.${process.pid}.tmp`;
     await fs.mkdir(path.dirname(target), { recursive: true });
-    await fs.writeFile(temporary, `${JSON.stringify(content, null, 2)}\n`, { mode: 0o660 });
-    await fs.rename(temporary, target);
+    const serialized = `${JSON.stringify(content, null, 2)}\n`;
+    await fs.writeFile(temporary, serialized, { mode: 0o660 });
+    try {
+      await fs.rename(temporary, target);
+    } catch (error: any) {
+      // Docker cannot rename over a file that is itself a bind-mount target.
+      // The complete payload is already validated and serialized at this point.
+      if (error?.code !== 'EBUSY' && error?.code !== 'EXDEV') throw error;
+      await fs.writeFile(target, serialized);
+      await fs.unlink(temporary).catch(() => {});
+    }
     return res.json({ success: true, content });
   } catch (error) {
     if (error instanceof TypeError || error instanceof SyntaxError) {
