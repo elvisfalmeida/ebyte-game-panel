@@ -95,9 +95,6 @@ app.use('/api/catalog', authMiddleware, auditHttpMutation, catalogRoutes);
 app.use('/api/system', authMiddleware, auditHttpMutation, systemRoutes);
 // /api/panel-content (root administration)
 app.use('/api/panel-content', authMiddleware, auditHttpMutation, panelContentRoutes);
-// /api/audit, /api/notifications and /api/notification-settings (root administration)
-app.use('/api', authMiddleware, auditHttpMutation, auditRoutes);
-
 // GET /api/health
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({ status: 'healthy', timestamp: nowIso() });
@@ -111,6 +108,10 @@ app.get('/api/version', (_req: Request, res: Response) => {
     instanceId,
   });
 });
+
+// /api/audit, /api/notifications and /api/notification-settings (root administration).
+// Register after public health/version endpoints so container probes remain unauthenticated.
+app.use('/api', authMiddleware, auditHttpMutation, auditRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {
