@@ -10,6 +10,15 @@ the content before writing it, using atomic replacement whenever the storage
 allows it and a validated direct-write fallback for Docker file bind mounts.
 Manual JSON editing remains available.
 
+The interface separates **News**, **Sidebar links**, and **Resources and
+tutorials** into compact sections while retaining unsaved edits when switching
+between them. Summary cards show item counts and enabled state. The publish
+button is enabled only while there are unpublished changes.
+
+Local entries use numbered responsive cards with grouped fields and deletion
+actions. Remote sources replace the local list with a dedicated endpoint field
+and a shortcut to open the configured URL.
+
 [English](PANEL_CONTENT.md) · [Português (Brasil)](PANEL_CONTENT.pt-BR.md)
 
 Ebyte Game Panel reads news, social links, and Resources from:

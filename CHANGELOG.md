@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Reworked the Panel content editor into compact News, Sidebar, and Resources
+  sections, with content summaries, unpublished-change state, responsive item
+  cards, clearer source controls, and consistent light/dark styling.
 - Refined the Audit and notifications interface with responsive section
   navigation, consistent form spacing, clearer channel status, improved inbox
   cards, deliberate filter application, and light/dark theme polish.
