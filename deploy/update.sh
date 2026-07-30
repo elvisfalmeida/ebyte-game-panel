@@ -80,7 +80,7 @@ ensure_runtime_env_defaults() {
   append_env_if_missing 'GAMEPANEL_APP_ROOT' "$APP_ROOT"
   append_env_if_missing 'GAMEPANEL_REPOSITORY_URL' "https://github.com/elvisfalmeida/ebyte-game-panel.git"
   append_env_if_missing 'VITE_LOG_TIME_ZONE' "UTC"
-  sed -i 's#^GAMEPANEL_REPOSITORY_URL=.*elvisfalmeida/game-panel\\.git.*$#GAMEPANEL_REPOSITORY_URL="https://github.com/elvisfalmeida/ebyte-game-panel.git"#' "$ENV_FILE"
+  sed -i 's#^GAMEPANEL_REPOSITORY_URL=.*elvisfalmeida/game-panel\.git.*$#GAMEPANEL_REPOSITORY_URL="https://github.com/elvisfalmeida/ebyte-game-panel.git"#' "$ENV_FILE"
   if [[ ! -f "$DEPLOY_DIR/panel-content.json" ]]; then
     cp "$APP_ROOT/frontend/public/panel-content.json" "$DEPLOY_DIR/panel-content.json"
     chown root:"$APP_GROUP" "$DEPLOY_DIR/panel-content.json"
