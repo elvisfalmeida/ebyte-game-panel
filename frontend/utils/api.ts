@@ -65,6 +65,46 @@ export interface EditablePanelContent {
   };
 }
 
+export type AuditSeverity = 'info' | 'warning' | 'error' | 'critical';
+
+export interface AuditEvent {
+  id: number;
+  timestamp: string;
+  actor_username: string;
+  source: 'gui' | 'api' | 'scheduler' | 'system';
+  category: string;
+  action: string;
+  outcome: 'success' | 'failure';
+  severity: AuditSeverity;
+  server_id: number | null;
+  resource_type: string | null;
+  resource_id: string | null;
+  ip_address: string | null;
+  summary: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface PanelNotification {
+  id: number;
+  timestamp: string;
+  severity: AuditSeverity;
+  title: string;
+  message: string;
+  server_id: number | null;
+  read_at: string | null;
+  telegram_status: 'not_requested' | 'pending' | 'sent' | 'failed';
+  telegram_error: string | null;
+}
+
+export interface NotificationSettings {
+  telegramEnabled: boolean;
+  telegramConfigured: boolean;
+  telegramMinSeverity: AuditSeverity;
+  panelMinSeverity: AuditSeverity;
+  updatedBy: string | null;
+  updatedAt: string;
+}
+
 // Background File Manager job (currently: archive extraction). totalBytes/totalFiles
 // are 0 (decompressed size is unknown up front), so progress is an activity count.
 export interface FileTransferJob {
@@ -382,6 +422,59 @@ class ApiClient {
   async updatePanelContent(content: EditablePanelContent) {
     const response = await this.client.put('/api/panel-content', content);
     return response.data as { success: true; content: EditablePanelContent };
+  }
+
+  async getAuditEvents(params: {
+    limit?: number;
+    offset?: number;
+    actor?: string;
+    category?: string;
+    outcome?: string;
+    severity?: string;
+  } = {}) {
+    const response = await this.client.get('/api/audit', { params });
+    return response.data as { events: AuditEvent[]; limit: number; offset: number };
+  }
+
+  async getNotifications(unreadOnly = false) {
+    const response = await this.client.get('/api/notifications', {
+      params: { limit: 100, unreadOnly },
+    });
+    return response.data as {
+      notifications: PanelNotification[];
+      unreadCount: number;
+    };
+  }
+
+  async markNotificationRead(id: number) {
+    const response = await this.client.post(`/api/notifications/${id}/read`);
+    return response.data as { success: true };
+  }
+
+  async markAllNotificationsRead() {
+    const response = await this.client.post('/api/notifications/read-all');
+    return response.data as { success: true };
+  }
+
+  async getNotificationSettings() {
+    const response = await this.client.get('/api/notification-settings');
+    return response.data as NotificationSettings;
+  }
+
+  async updateNotificationSettings(payload: {
+    telegramEnabled: boolean;
+    telegramBotToken?: string;
+    telegramChatId?: string;
+    telegramMinSeverity: AuditSeverity;
+    panelMinSeverity: AuditSeverity;
+  }) {
+    const response = await this.client.put('/api/notification-settings', payload);
+    return response.data as NotificationSettings;
+  }
+
+  async testTelegramNotification() {
+    const response = await this.client.post('/api/notification-settings/telegram/test');
+    return response.data as { success: true };
   }
 
   async startServer(id: number) {

@@ -4,8 +4,10 @@ import { comparePasswords, generateToken, hashPassword } from '../utils/auth.js'
 import { userRepository, serverMemberRepository } from '../database/index.js';
 import { asNonEmptyString } from './users.js';
 import { sendRouteError } from '../utils/routeErrors.js';
+import { logError } from '../utils/logger.js';
 import { PERMISSIONS } from '../permissions.js';
 import { requireBodyObject } from '../utils/httpValidation.js';
+import { recordAuditEvent } from '../services/notifications.js';
 
 const router = Router();
 
@@ -140,6 +142,32 @@ function clearLoginFailures(req: Request, identifier: string): void {
   clearLoginRate(loginRateByIp, getClientIp(req));
 }
 
+async function auditLogin(
+  req: Request,
+  username: string,
+  outcome: 'success' | 'failure',
+  reason: string
+): Promise<void> {
+  try {
+    await recordAuditEvent({
+      actorUsername: username || 'unknown',
+      source: 'gui',
+      category: 'authentication',
+      action: 'auth.login',
+      outcome,
+      severity: outcome === 'success' ? 'info' : 'warning',
+      resourceType: 'session',
+      ipAddress: getClientIp(req),
+      summary: outcome === 'success' ? 'Login realizado com sucesso' : `Falha de login: ${reason}`,
+    }, {
+      notify: outcome === 'failure',
+      notificationTitle: 'Falha de autenticação',
+    });
+  } catch (error) {
+    logError('AUTH:LOGIN_AUDIT', error, { username, outcome });
+  }
+}
+
 // POST /api/auth/register
 router.post(
   '/register',
@@ -240,27 +268,32 @@ router.post('/login', async (req: Request, res: Response) => {
     }
 
     if (!ensureLoginRateLimit(req, res, normalizedIdentifier)) {
+      await auditLogin(req, normalizedIdentifier, 'failure', 'limite de tentativas excedido');
       return;
     }
 
     const user = await userRepository.findByUsername(normalizedIdentifier);
     if (!user) {
       noteLoginFailure(req, normalizedIdentifier);
+      await auditLogin(req, normalizedIdentifier, 'failure', 'credenciais inválidas');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     if (!user.is_enabled) {
       noteLoginFailure(req, normalizedIdentifier);
+      await auditLogin(req, normalizedIdentifier, 'failure', 'conta desativada');
       return res.status(403).json({ error: 'Account disabled' });
     }
 
     const validPassword = await comparePasswords(password, user.password_hash);
     if (!validPassword) {
       noteLoginFailure(req, normalizedIdentifier);
+      await auditLogin(req, normalizedIdentifier, 'failure', 'credenciais inválidas');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
     clearLoginFailures(req, normalizedIdentifier);
+    await auditLogin(req, user.username, 'success', '');
 
     const token = generateToken({
       userId: user.id,

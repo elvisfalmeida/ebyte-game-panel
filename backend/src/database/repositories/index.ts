@@ -10,3 +10,6 @@ export { LinuxGsmCatalogRepository } from './linuxGsmCatalogRepository.js';
 export { FileTransferJobRepository } from './fileTransferJobRepository.js';
 export { ScheduledTaskRepository } from './scheduledTaskRepository.js';
 export { PanelUpdateJobRepository } from './panelUpdateJobRepository.js';
+export { AuditRepository } from './auditRepository.js';
+export { NotificationRepository } from './notificationRepository.js';
+export { NotificationSettingsRepository } from './notificationSettingsRepository.js';

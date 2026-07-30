@@ -2,6 +2,8 @@ import { bus } from '../../realtime/bus.js';
 import type { ServerActionRow } from '../../types/database.js';
 import { nowIso } from '../../utils/time.js';
 import { BaseRepository } from './base.js';
+import { recordAuditEvent } from '../../services/notifications.js';
+import { logError } from '../../utils/logger.js';
 
 export class ServerActionsRepository extends BaseRepository {
   async create(serverId: number, level: string, message: string, actorUsername: string) {
@@ -36,6 +38,32 @@ export class ServerActionsRepository extends BaseRepository {
       actorUsername,
       actionId: id,
       timestamp,
+    });
+
+    const normalizedLevel = level === 'warn' ? 'warning' : level;
+    const severity =
+      normalizedLevel === 'error'
+        ? 'error'
+        : normalizedLevel === 'warning'
+          ? 'warning'
+          : 'info';
+    await recordAuditEvent({
+      actorUsername: actorUsername || 'system',
+      source: actorUsername === 'scheduler' ? 'scheduler' : 'system',
+      category: 'server',
+      action: 'server.action',
+      outcome: severity === 'error' ? 'failure' : 'success',
+      severity,
+      serverId,
+      resourceType: 'game-server',
+      resourceId: String(serverId),
+      summary: message,
+      metadata: { level },
+    }, {
+      notify: severity === 'warning' || severity === 'error',
+      notificationTitle: severity === 'error' ? 'Falha no servidor' : 'Atenção no servidor',
+    }).catch((error) => {
+      logError('SERVER_ACTIONS:AUDIT', error, { serverId, level });
     });
 
     return id;

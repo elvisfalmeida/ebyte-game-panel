@@ -11,4 +11,7 @@ export {
   FileTransferJobRepository,
   ScheduledTaskRepository,
   PanelUpdateJobRepository,
+  AuditRepository,
+  NotificationRepository,
+  NotificationSettingsRepository,
 } from './repositories/index.js';

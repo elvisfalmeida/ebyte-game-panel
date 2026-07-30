@@ -9,6 +9,7 @@ import { InstallGameServer } from '../InstallGameServer';
 import { Resources } from '../Resources';
 import { UserAdministration } from '../UserAdministration';
 import { PanelContentEditor } from '../PanelContentEditor';
+import { AuditNotifications } from '../AuditNotifications';
 import { ServerConsoleTabs } from '../ServerConsoleTabs';
 import { apiClient } from '../../utils/api';
 import { LogPromptToasts } from '../LogPromptToasts';
@@ -346,6 +347,12 @@ export function AppShell({
         {activeTab === 'panel-content' && currentUser?.isRoot && (
           <AppPageLayout className={pageShellClassName}>
             <PanelContentEditor />
+          </AppPageLayout>
+        )}
+
+        {activeTab === 'audit-notifications' && currentUser?.isRoot && (
+          <AppPageLayout className={pageShellClassName}>
+            <AuditNotifications />
           </AppPageLayout>
         )}
       </main>
