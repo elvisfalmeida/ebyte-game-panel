@@ -90,10 +90,10 @@ ensure_runtime_env_defaults() {
 
 ensure_panel_content_editor_mount() {
   if ! grep -q 'PANEL_CONTENT_FILE:' "$COMPOSE_FILE"; then
-    sed -i '/TELEMETRY_API_BASE_URL:/a\\      PANEL_CONTENT_FILE: "/config/panel-content.json"' "$COMPOSE_FILE"
+    sed -i '/TELEMETRY_API_BASE_URL:/a\      PANEL_CONTENT_FILE: "/config/panel-content.json"' "$COMPOSE_FILE"
   fi
   if ! grep -q 'panel-content.json:/config/panel-content.json' "$COMPOSE_FILE"; then
-    sed -i '/- "\\.\\.\\/data:\\/data"/a\\      - "./panel-content.json:/config/panel-content.json"' "$COMPOSE_FILE"
+    sed -i '/- "\\.\\.\\/data:\\/data"/a\      - "./panel-content.json:/config/panel-content.json"' "$COMPOSE_FILE"
   fi
 }
 
