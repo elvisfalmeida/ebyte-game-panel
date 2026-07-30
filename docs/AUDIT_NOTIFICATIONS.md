@@ -23,6 +23,10 @@ variables are never copied into the audit metadata.
 The panel inbox and Telegram use independent severity thresholds. Defaults are
 **warning** for the panel and **error** for Telegram.
 
+The interface separates **Notifications**, **Audit log**, and **Settings**.
+Audit filters are applied explicitly, and the settings status card distinguishes
+configured credentials from enabled delivery.
+
 Bot credentials are encrypted at rest with AES-256-GCM using a key derived from
 the instance `JWT_SECRET`. The API never returns stored credentials. Preserve
 the instance secret together with database backups.

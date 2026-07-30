@@ -46,6 +46,10 @@
 
 ### Alterado
 
+- **Interface de auditoria e alertas** — navegação, formulários, botões,
+  filtros, cartões de notificação, tabela e status do Telegram foram refinados
+  para melhorar espaçamento, hierarquia visual, responsividade e temas
+  claro/escuro.
 - **Fuso configurável nos logs** — os horários do console podem ser fixados com
   `VITE_LOG_TIME_ZONE`; a imagem do Palworld agora inclui a base IANA e aceita a
   variável padrão `TZ` por servidor.

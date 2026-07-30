@@ -42,6 +42,12 @@ O painel e o Telegram possuem limiares independentes:
 Por padrão, a central interna recebe eventos a partir de **Atenção** e o
 Telegram, quando ativado, recebe eventos a partir de **Erro**.
 
+Na interface, a central é dividida em **Notificações**, **Registro de
+auditoria** e **Configurações**. Os filtros só são aplicados ao selecionar
+**Aplicar filtros**, permitindo preencher usuário e severidade sem recarregar a
+tela a cada tecla. O cartão lateral das configurações informa separadamente se
+as credenciais estão configuradas e se a entrega está ativada.
+
 ## Segurança e operação
 
 - Somente o usuário root acessa eventos, notificações e configuração do canal.
