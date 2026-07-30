@@ -93,6 +93,7 @@ Recursos.
 
 ## 📚 Documentação
 
+- [Fusos horários](docs/TIMEZONE.pt-BR.md)
 - [Configurações ampliadas do Palworld](docs/PALWORLD_SETTINGS.pt-BR.md)
 - [Telemetria](docs/TELEMETRY.pt-BR.md)
 - [Personalização de marca](docs/BRANDING.pt-BR.md)

@@ -459,6 +459,7 @@ APP_INSTANCE_SECRET=$(escape_env_value "$instance_secret")
 TELEMETRY_ENABLED=$(escape_env_value "$telemetry_enabled")
 TELEMETRY_API_BASE_URL=$(escape_env_value "$DB_API_BASE_URL")
 VITE_DB_API_BASE_URL=$(escape_env_value "$DB_API_BASE_URL")
+VITE_LOG_TIME_ZONE=$(escape_env_value "UTC")
 COMPOSE_PROJECT_NAME=$(escape_env_value "$COMPOSE_PROJECT_NAME")
 EOF
 
@@ -533,6 +534,7 @@ services:
       dockerfile: frontend/Dockerfile
       args:
         VITE_DB_API_BASE_URL: "${VITE_DB_API_BASE_URL}"
+        VITE_LOG_TIME_ZONE: "${VITE_LOG_TIME_ZONE}"
     networks:
       - web
     restart: unless-stopped

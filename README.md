@@ -98,6 +98,9 @@ and dynamically injected interface fragments. This includes server wipe,
 scheduled tasks, terminal, backups, files, container configuration, user
 administration, permission labels, and Resources. English is the fallback.
 
+See [Time zones](docs/TIMEZONE.md) to configure console and game-container
+timestamps.
+
 > 📡 OVHcloud Game Panel sends usage telemetry by default. You can disable it at install with `--telemetry-disabled`. See [docs/TELEMETRY.md](docs/TELEMETRY.md).
 
 ## 🏗️ Architecture
