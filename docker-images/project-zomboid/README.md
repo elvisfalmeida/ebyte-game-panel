@@ -1,6 +1,6 @@
 # Project Zomboid Docker Image
 
-This directory contains the Project Zomboid dedicated server image used by OVHcloud Game Panel.
+This directory contains the Project Zomboid dedicated server image used by Ebyte Game Panel.
 
 The image installs and runs a Project Zomboid dedicated server through SteamCMD (Steam app id
 `380870`). The server ships its own bundled JRE and is launched through its `start-server.sh`.

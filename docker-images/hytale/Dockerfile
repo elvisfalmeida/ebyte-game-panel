@@ -14,7 +14,7 @@ FROM eclipse-temurin:25-jre
 ARG IMAGE_CREATED="unknown"
 ARG IMAGE_REVISION="unknown"
 ARG IMAGE_VERSION="dev"
-ARG IMAGE_SOURCE="https://github.com/ovh/game-panel"
+ARG IMAGE_SOURCE="https://github.com/elvisfalmeida/ebyte-game-panel"
 
 LABEL org.opencontainers.image.title="Hytale Server Image" \
       org.opencontainers.image.description="Game Panel runtime image for Hytale dedicated servers." \

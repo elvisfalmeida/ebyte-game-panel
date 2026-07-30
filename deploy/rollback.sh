@@ -100,7 +100,7 @@ main() {
 
   local repo_url=""
   repo_url="$(read_env_raw_value 'GAMEPANEL_REPOSITORY_URL')"
-  [[ -n "$repo_url" ]] || repo_url="https://github.com/elvisfalmeida/game-panel.git"
+  [[ -n "$repo_url" ]] || repo_url="https://github.com/elvisfalmeida/ebyte-game-panel.git"
 
   log "Stopping Game Panel stack..."
   compose_cmd down --remove-orphans || warn "Could not stop the stack cleanly; continuing."

@@ -33,9 +33,17 @@ const DEFAULT_CONTENT: PanelContent = {
   resources: { source: 'local', items: [] },
 };
 
-const PanelContentContext = createContext<PanelContent>(DEFAULT_CONTENT);
+interface PanelContentContextValue {
+  content: PanelContent;
+  reload: () => Promise<void>;
+}
 
-function normalizeContent(value: Partial<PanelContent> | null | undefined): PanelContent {
+const PanelContentContext = createContext<PanelContentContextValue>({
+  content: DEFAULT_CONTENT,
+  reload: async () => {},
+});
+
+export function normalizePanelContent(value: Partial<PanelContent> | null | undefined): PanelContent {
   return {
     news: {
       ...DEFAULT_CONTENT.news,
@@ -57,32 +65,28 @@ function normalizeContent(value: Partial<PanelContent> | null | undefined): Pane
 
 export function PanelContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState(DEFAULT_CONTENT);
+  const configuredUrl = import.meta.env.VITE_PANEL_CONTENT_URL?.trim();
+  const url = configuredUrl || '/panel-content.json';
+
+  const reload = async () => {
+    const response = await fetch(`${url}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!response.ok) throw new Error(`Content configuration returned ${response.status}`);
+    setContent(normalizePanelContent(await response.json()));
+  };
 
   useEffect(() => {
-    let cancelled = false;
-    const configuredUrl = import.meta.env.VITE_PANEL_CONTENT_URL?.trim();
-    const url = configuredUrl || '/panel-content.json';
-
-    fetch(url, { cache: 'no-store' })
-      .then((response) => {
-        if (!response.ok) throw new Error(`Content configuration returned ${response.status}`);
-        return response.json();
-      })
-      .then((value) => {
-        if (!cancelled) setContent(normalizeContent(value));
-      })
-      .catch((error) => {
-        console.error('Failed to load panel content configuration:', error);
-      });
-
-    return () => {
-      cancelled = true;
-    };
+    reload().catch((error) => {
+      console.error('Failed to load panel content configuration:', error);
+    });
   }, []);
 
-  return <PanelContentContext.Provider value={content}>{children}</PanelContentContext.Provider>;
+  return <PanelContentContext.Provider value={{ content, reload }}>{children}</PanelContentContext.Provider>;
 }
 
 export function usePanelContent(): PanelContent {
+  return useContext(PanelContentContext).content;
+}
+
+export function usePanelContentActions(): Pick<PanelContentContextValue, 'reload'> {
   return useContext(PanelContentContext);
 }

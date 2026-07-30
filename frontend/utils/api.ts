@@ -45,6 +45,26 @@ export interface PanelUpdateCheck {
   newerReleases: ReleaseNotes[];         // newer versions, most-recent first ([] if up to date)
 }
 
+export interface EditablePanelContent {
+  news: {
+    enabled: boolean;
+    source: 'local' | 'remote';
+    remoteUrl?: string;
+    rotationSeconds: number;
+    items: import('./api/types').CatalogNewsItem[];
+  };
+  social: {
+    enabled: boolean;
+    title?: string;
+    links: Array<{ label: string; url: string; icon?: string }>;
+  };
+  resources: {
+    source: 'local' | 'remote';
+    remoteUrl?: string;
+    items: import('./api/types').CatalogResourceItem[];
+  };
+}
+
 // Background File Manager job (currently: archive extraction). totalBytes/totalFiles
 // are 0 (decompressed size is unknown up front), so progress is an activity count.
 export interface FileTransferJob {
@@ -352,6 +372,16 @@ class ApiClient {
       },
     });
     return response.data as { resources: import('./api/types').CatalogResourceItem[] };
+  }
+
+  async getPanelContent() {
+    const response = await this.client.get('/api/panel-content');
+    return response.data as EditablePanelContent;
+  }
+
+  async updatePanelContent(content: EditablePanelContent) {
+    const response = await this.client.put('/api/panel-content', content);
+    return response.data as { success: true; content: EditablePanelContent };
   }
 
   async startServer(id: number) {

@@ -1,6 +1,6 @@
-# 🐳 OVHcloud Game Panel Docker Images
+# 🐳 Ebyte Game Panel Docker Images
 
-This directory holds the Docker image sources maintained alongside OVHcloud Game Panel — the game server runtimes it deploys, and the panel's own operational images.
+This directory holds the Docker image sources maintained alongside Ebyte Game Panel — the game server runtimes it deploys, and the panel's own operational images.
 
 ## 🎮 Game server images
 

@@ -1,6 +1,6 @@
 # Minecraft Docker Images
 
-This directory contains the Minecraft game server images used by OVHcloud Game Panel.
+This directory contains the Minecraft game server images used by Ebyte Game Panel.
 
 The images provide a predictable Docker runtime for Minecraft Java Edition and Minecraft Bedrock Edition, with scripts for console commands, backups, restores, health checks, and graceful shutdown.
 

@@ -21,7 +21,7 @@
     "links": [
       {
         "label": "GitHub",
-        "url": "https://github.com/elvisfalmeida/game-panel",
+        "url": "https://github.com/elvisfalmeida/ebyte-game-panel",
         "icon": "github"
       }
     ]
@@ -33,7 +33,7 @@
         "id": 1,
         "title": "Documentação do Ebyte Game Panel",
         "description": "Guias de configuração, personalização, fusos horários e recursos do painel.",
-        "url": "https://github.com/elvisfalmeida/game-panel#readme",
+        "url": "https://github.com/elvisfalmeida/ebyte-game-panel#readme",
         "category": "Documentação",
         "mediaType": "article",
         "gameKey": null
@@ -42,7 +42,7 @@
         "id": 2,
         "title": "Configurações do Palworld",
         "description": "Referência das configurações ampliadas do Palworld disponíveis na interface.",
-        "url": "https://github.com/elvisfalmeida/game-panel/blob/main/docs/PALWORLD_SETTINGS.pt-BR.md",
+        "url": "https://github.com/elvisfalmeida/ebyte-game-panel/blob/main/docs/PALWORLD_SETTINGS.pt-BR.md",
         "category": "Palworld",
         "mediaType": "article",
         "gameKey": "palworld"

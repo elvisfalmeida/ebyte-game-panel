@@ -4,6 +4,11 @@
 
 ## Unreleased
 
+- Added a root-only visual editor for news, social links, resources, and
+  tutorials, with backend validation, atomic writes, and immediate refresh.
+- Established Ebyte Game Panel as an independent product repository, with
+  Brazilian Portuguese as the primary README language.
+
 ### ✨ Added
 
 - **Runtime panel content** — news, sidebar links, and Resources can use local

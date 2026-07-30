@@ -79,6 +79,7 @@ type AppConfig = {
     instanceSecret: string | null;
     telemetryEnabled: boolean;
     telemetryApiBaseUrl: string | null;
+    panelContentFile: string;
 };
 
 let cached: AppConfig | null = null;
@@ -113,11 +114,12 @@ export function getConfig(): AppConfig {
         dockerSocket: envOrDefault('DOCKER_SOCKET', '/var/run/docker.sock'),
         composeProjectName: envOrDefault('COMPOSE_PROJECT_NAME', 'gamepanel'),
         updaterImage: envOrDefault('GAMEPANEL_UPDATER_IMAGE', gamePanelImage('gamepanel-updater')),
-        repositoryUrl: envOrDefault('GAMEPANEL_REPOSITORY_URL', 'https://github.com/elvisfalmeida/game-panel.git'),
+        repositoryUrl: envOrDefault('GAMEPANEL_REPOSITORY_URL', 'https://github.com/elvisfalmeida/ebyte-game-panel.git'),
         instanceId: process.env.APP_INSTANCE_ID?.trim() || null,
         instanceSecret: process.env.APP_INSTANCE_SECRET?.trim() || null,
         telemetryEnabled: boolEnv('TELEMETRY_ENABLED', true),
         telemetryApiBaseUrl: process.env.TELEMETRY_API_BASE_URL?.trim() || null,
+        panelContentFile: envOrDefault('PANEL_CONTENT_FILE', '/config/panel-content.json'),
     };
 
     return cached;

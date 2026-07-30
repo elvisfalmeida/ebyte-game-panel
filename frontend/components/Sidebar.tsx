@@ -214,6 +214,7 @@ export function Sidebar({
     { id: 'host-status', label: t('nav.hostStatus', 'Host Status'), iconName: 'analysis' },
     { id: 'admin-users', label: t('nav.users', 'User Administration'), iconName: 'user', disabled: !canManageUsers },
     { id: 'resources', label: t('nav.resources', 'Resources'), iconName: 'book' },
+    { id: 'panel-content', label: t('nav.panelContent', 'Panel content'), iconName: 'book', disabled: !currentUser?.isRoot },
   ];
 
   return (
@@ -439,24 +440,19 @@ export function Sidebar({
                   <div className="grid gap-6 md:grid-cols-2">
                     <div className="space-y-3">
                       <LegalSubheading>Service editor</LegalSubheading>
-                      <p>The &quot;OVHcloud Game Panel&quot; is edited by:</p>
+                      <p>The &quot;Ebyte Game Panel&quot; is open-source, self-hosted software.</p>
                       <div className="space-y-1">
-                        <p className="font-semibold text-white">OVHcloud SAS</p>
-                        <p>SAS with a capital of EUR50 million</p>
-                        <p>RCS Lille Metropole 424 761 419 00045</p>
-                        <p>APE code 2620Z</p>
-                        <p>VAT NO: FR 22 424 761 419</p>
-                        <p>Head office: 2 rue Kellermann - 59100 Roubaix - France</p>
+                        <p className="font-semibold text-white">Ebyte Game Panel project</p>
+                        <p>The administrator of each installation is responsible for the service offered through it.</p>
+                        <p>Project information and source code are available in the official repository.</p>
                       </div>
                     </div>
 
                     <div className="space-y-3">
                       <LegalSubheading>Hosting</LegalSubheading>
                       <div className="space-y-1">
-                        <p className="font-semibold text-white">OVH</p>
-                        <p>2 rue Kellermann</p>
-                        <p>59100 Roubaix - France</p>
-                        <p>Website: https://www.ovhcloud.com</p>
+                        <p className="font-semibold text-white">Self-hosted installation</p>
+                        <p>Infrastructure and hosting are selected and operated by the installation administrator.</p>
                       </div>
                     </div>
                   </div>
@@ -812,12 +808,12 @@ export function Sidebar({
             <div className="flex flex-col items-center gap-4 text-center">
               <div>
                 <AppModalDescription className="text-xl font-bold text-gray-900 dark:text-white">
-                  Meet the team behind the OVHcloud Game Panel!
+                  Credits to the original OVHcloud Game Panel team
                 </AppModalDescription>
               </div>
               <img
                 src="/GPteam.png"
-                alt="OVHcloud Game Panel team"
+                alt="Original OVHcloud Game Panel team"
                 draggable={false}
                 className="w-full rounded-lg object-contain select-none"
               />

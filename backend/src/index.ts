@@ -14,6 +14,7 @@ import serverMembersRoutes from './routes/serverMembers.js';
 import serverRoutes from './routes/servers.js';
 import systemRoutes from './routes/system.js';
 import catalogRoutes from './routes/catalog.js';
+import panelContentRoutes from './routes/panelContent.js';
 import { setupWebSocket } from './websocket/handler.js';
 import { getAppVersion } from './utils/appInfo.js';
 import { logError, logInfo } from './utils/logger.js';
@@ -90,6 +91,8 @@ app.use('/api/servers', authMiddleware, serverRoutes);
 app.use('/api/catalog', authMiddleware, catalogRoutes);
 // /api/system
 app.use('/api/system', authMiddleware, systemRoutes);
+// /api/panel-content (root administration)
+app.use('/api/panel-content', authMiddleware, panelContentRoutes);
 
 // GET /api/health
 app.get('/api/health', (_req: Request, res: Response) => {

@@ -6,6 +6,12 @@
 
 ### Adicionado
 
+- **Editor visual de conteúdo** — o usuário root pode publicar notícias, links
+  sociais, recursos e tutoriais pela interface, com fontes locais/remotas,
+  validação no backend, gravação atômica e atualização imediata da tela.
+- **Produto independente** — português brasileiro passa a ser o idioma principal
+  do README, o repositório oficial passa a ser `ebyte-game-panel` e os links de
+  instalação, atualização, rollback e conteúdo acompanham a nova identidade.
 - **Conteúdo do painel em tempo de execução** — notícias, links da barra lateral
   e Recursos podem usar conteúdo JSON local ou fontes remotas independentes,
   sem depender do catálogo da OVHcloud.
@@ -37,8 +43,8 @@
   `VITE_LOG_TIME_ZONE`; a imagem do Palworld agora inclui a base IANA e aceita a
   variável padrão `TZ` por servidor.
 
-- Instalação, atualização, rollback e backend permanecem apontados para
-  `elvisfalmeida/game-panel`.
+- Instalação, atualização, rollback e backend apontam para
+  `elvisfalmeida/ebyte-game-panel`.
 
 ## v1.2.0 — 30/07/2026
 

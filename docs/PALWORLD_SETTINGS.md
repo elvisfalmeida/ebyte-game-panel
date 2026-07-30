@@ -76,7 +76,7 @@ These disable building deterioration and item weight respectively.
 The local Git remotes should use:
 
 ```text
-origin    https://github.com/elvisfalmeida/game-panel.git
+origin    https://github.com/elvisfalmeida/ebyte-game-panel.git
 upstream  https://github.com/ovh/game-panel.git
 ```
 

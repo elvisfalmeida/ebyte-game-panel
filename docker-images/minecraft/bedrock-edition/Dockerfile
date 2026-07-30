@@ -3,7 +3,7 @@ FROM ubuntu:22.04
 ARG IMAGE_CREATED="unknown"
 ARG IMAGE_REVISION="unknown"
 ARG IMAGE_VERSION="dev"
-ARG IMAGE_SOURCE="https://github.com/ovh/game-panel"
+ARG IMAGE_SOURCE="https://github.com/elvisfalmeida/ebyte-game-panel"
 
 LABEL org.opencontainers.image.title="Minecraft Bedrock Edition Server Image" \
       org.opencontainers.image.description="Game Panel image for Minecraft Bedrock Edition servers." \

@@ -1,6 +1,18 @@
 # Conteúdo do painel
 
-[English](PANEL_CONTENT.md) · [Português (Brasil)](PANEL_CONTENT.pt-BR.md)
+[Português (Brasil)](PANEL_CONTENT.pt-BR.md) · [English](PANEL_CONTENT.md)
+
+## Editor visual
+
+O usuário root pode abrir **Conteúdo do painel** na barra lateral para editar e
+publicar notícias, links sociais, recursos e tutoriais. A tela segue os mesmos
+cards, botões, campos, cores e comportamento responsivo das demais áreas
+administrativas.
+
+O editor permite alternar fontes locais e remotas, adicionar e remover itens,
+configurar o banner e publicar as alterações sem acessar o servidor. O backend
+valida URLs, limites e campos obrigatórios e substitui o arquivo de forma
+atômica para evitar conteúdo parcialmente gravado.
 
 O Ebyte Game Panel lê notícias, links sociais e Recursos de:
 
@@ -8,9 +20,9 @@ O Ebyte Game Panel lê notícias, links sociais e Recursos de:
 /opt/gamepanel/deploy/panel-content.json
 ```
 
-O arquivo é montado como somente leitura no contêiner do frontend e preservado
-pelas atualizações. Depois de editá-lo, basta recarregar o navegador; não é
-necessário recompilar o frontend.
+O arquivo é montado como leitura no frontend e como leitura/gravação no backend,
+com acesso de edição restrito ao usuário root. Ele é preservado pelas
+atualizações e não exige recompilar o frontend.
 
 ## Banner de notícias
 
@@ -33,5 +45,6 @@ Os valores aceitos em `iconKey` são `server`, `restart`, `warning`, `news`,
 `resources.items`; o modo remoto consulta `/resources` em `remoteUrl`. Cada item
 aceita título, descrição, URL, categoria, tipo de mídia e chave de jogo opcional.
 
-Mantenha o arquivo como JSON válido. Conteúdo inválido ou indisponível usa um
-fallback seguro e registra o erro no console do navegador.
+Ainda é possível editar o arquivo manualmente. Mantenha-o como JSON válido;
+conteúdo inválido ou indisponível usa um fallback seguro e registra o erro no
+console do navegador.

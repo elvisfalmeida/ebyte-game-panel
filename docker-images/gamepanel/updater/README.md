@@ -1,6 +1,6 @@
 # 🔄 Game Panel Updater Docker Image
 
-This directory contains the Game Panel Updater image used by OVHcloud Game Panel.
+This directory contains the updater image used by Ebyte Game Panel.
 
 The updater is a Game Panel operational image. It is not a game server image. It is designed to run as a one-shot container that updates an installed panel.
 

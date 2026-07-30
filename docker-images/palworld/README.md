@@ -1,6 +1,6 @@
 # Palworld Docker Image
 
-This directory contains the Palworld dedicated server image used by OVHcloud Game Panel.
+This directory contains the Palworld dedicated server image used by Ebyte Game Panel.
 
 The image installs and runs a Palworld dedicated server through SteamCMD (Steam app id `2394010`).
 

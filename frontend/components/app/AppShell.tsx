@@ -8,6 +8,7 @@ import { NewsPanel } from '../NewsPanel';
 import { InstallGameServer } from '../InstallGameServer';
 import { Resources } from '../Resources';
 import { UserAdministration } from '../UserAdministration';
+import { PanelContentEditor } from '../PanelContentEditor';
 import { ServerConsoleTabs } from '../ServerConsoleTabs';
 import { apiClient } from '../../utils/api';
 import { LogPromptToasts } from '../LogPromptToasts';
@@ -341,6 +342,12 @@ export function AppShell({
             />
           </AppPageLayout>
         )}
+
+        {activeTab === 'panel-content' && currentUser?.isRoot && (
+          <AppPageLayout className={pageShellClassName}>
+            <PanelContentEditor />
+          </AppPageLayout>
+        )}
       </main>
 
       <LogPromptToasts toasts={activeLogPromptToasts} onClose={removeLogPromptToast} />
@@ -364,4 +371,3 @@ export function AppShell({
     </div>
   );
 }
-

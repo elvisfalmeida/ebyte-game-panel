@@ -1,6 +1,6 @@
 # Hytale Docker Image
 
-This directory contains the Hytale game server runtime image used by OVHcloud Game Panel.
+This directory contains the Hytale game server runtime image used by Ebyte Game Panel.
 
 The Hytale image is a runtime image. It expects the Hytale server files to be prepared before the container starts.
 

@@ -451,7 +451,7 @@ JWT_SECRET=$(escape_env_value "$jwt_secret")
 ADMIN_USERNAME=$(escape_env_value "$ADMIN_USERNAME")
 ADMIN_PASSWORD=$(escape_env_value "$ADMIN_PASSWORD")
 GAMEPANEL_APP_ROOT=$(escape_env_value "$APP_ROOT")
-GAMEPANEL_REPOSITORY_URL=https://github.com/elvisfalmeida/game-panel.git
+GAMEPANEL_REPOSITORY_URL=https://github.com/elvisfalmeida/ebyte-game-panel.git
 DOCKER_SOCKET=/var/run/docker.sock
 TRUST_PROXY=$(escape_env_value "1")
 APP_INSTANCE_ID=$(escape_env_value "$instance_id")
@@ -519,8 +519,10 @@ services:
       APP_INSTANCE_SECRET: "${APP_INSTANCE_SECRET}"
       TELEMETRY_ENABLED: "${TELEMETRY_ENABLED}"
       TELEMETRY_API_BASE_URL: "${TELEMETRY_API_BASE_URL}"
+      PANEL_CONTENT_FILE: "/config/panel-content.json"
     volumes:
       - "../data:/data"
+      - "./panel-content.json:/config/panel-content.json"
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "../servers:${GAMEPANEL_APP_ROOT}/servers"
     networks:

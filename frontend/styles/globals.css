@@ -683,6 +683,26 @@ html:not(.dark) .gp-app-select[data-ods='select'] [data-ods='select-content'] [r
   background: #edf2fb !important;
 }
 /* Resources "Filter by Category" — stronger contrast in light mode */
+.gp-native-select,
+.gp-native-textarea {
+  width: 100%;
+  border: 1px solid var(--gp-border, rgba(148, 163, 184, 0.35));
+  border-radius: 0.5rem;
+  background: transparent;
+  padding: 0.65rem 0.75rem;
+  color: inherit;
+  outline: none;
+}
+
+.gp-native-textarea {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+
+.gp-native-select:focus,
+.gp-native-textarea:focus {
+  border-color: var(--gp-primary-300);
+}
 html:not(.dark) .gp-resources-select[data-ods='select'] .gp-app-select-control[data-ods='select-control'] {
   border: 1px solid #94a3b8 !important;
   border-radius: 0.5rem !important;

@@ -78,12 +78,22 @@ ensure_runtime_env_defaults() {
   append_env_if_missing 'TELEMETRY_ENABLED' "true"
   append_env_if_missing 'TELEMETRY_API_BASE_URL' "$current_db_api_base_url"
   append_env_if_missing 'GAMEPANEL_APP_ROOT' "$APP_ROOT"
-  append_env_if_missing 'GAMEPANEL_REPOSITORY_URL' "https://github.com/elvisfalmeida/game-panel.git"
+  append_env_if_missing 'GAMEPANEL_REPOSITORY_URL' "https://github.com/elvisfalmeida/ebyte-game-panel.git"
   append_env_if_missing 'VITE_LOG_TIME_ZONE' "UTC"
+  sed -i 's#^GAMEPANEL_REPOSITORY_URL=.*elvisfalmeida/game-panel\\.git.*$#GAMEPANEL_REPOSITORY_URL="https://github.com/elvisfalmeida/ebyte-game-panel.git"#' "$ENV_FILE"
   if [[ ! -f "$DEPLOY_DIR/panel-content.json" ]]; then
     cp "$APP_ROOT/frontend/public/panel-content.json" "$DEPLOY_DIR/panel-content.json"
     chown root:"$APP_GROUP" "$DEPLOY_DIR/panel-content.json"
     chmod 0660 "$DEPLOY_DIR/panel-content.json"
+  fi
+}
+
+ensure_panel_content_editor_mount() {
+  if ! grep -q 'PANEL_CONTENT_FILE:' "$COMPOSE_FILE"; then
+    sed -i '/TELEMETRY_API_BASE_URL:/a\\      PANEL_CONTENT_FILE: "/config/panel-content.json"' "$COMPOSE_FILE"
+  fi
+  if ! grep -q 'panel-content.json:/config/panel-content.json' "$COMPOSE_FILE"; then
+    sed -i '/- "\\.\\.\\/data:\\/data"/a\\      - "./panel-content.json:/config/panel-content.json"' "$COMPOSE_FILE"
   fi
 }
 
@@ -150,6 +160,7 @@ main() {
 
   sync_project_sources
   ensure_runtime_env_defaults
+  ensure_panel_content_editor_mount
 
   log "Running deploy migrations..."
   run_deploy_migrations

@@ -1,5 +1,13 @@
 # Panel content
 
+[Português (Brasil)](PANEL_CONTENT.pt-BR.md) · [English](PANEL_CONTENT.md)
+
+## Visual editor
+
+Root users can open **Panel content** in the sidebar to manage and publish news,
+social links, resources, and tutorials without editing JSON. The API validates
+the content and writes it atomically. Manual JSON editing remains available.
+
 [English](PANEL_CONTENT.md) · [Português (Brasil)](PANEL_CONTENT.pt-BR.md)
 
 Ebyte Game Panel reads news, social links, and Resources from:

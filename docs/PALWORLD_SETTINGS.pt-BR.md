@@ -66,7 +66,7 @@ Esses valores desativam a deterioração das construções e o peso dos itens.
 O fork utiliza:
 
 ```text
-origin    https://github.com/elvisfalmeida/game-panel.git
+origin    https://github.com/elvisfalmeida/ebyte-game-panel.git
 upstream  https://github.com/ovh/game-panel.git
 ```
 
