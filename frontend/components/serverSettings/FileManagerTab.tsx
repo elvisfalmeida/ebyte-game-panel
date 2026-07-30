@@ -25,6 +25,7 @@ import { lazy, Suspense, useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { AppButton, AppInput } from '../../src/ui/components';
 import { useCoarsePointer } from '../../src/ui/utils/useCoarsePointer';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 // Lazily loaded so CodeMirror (editor + 7 language grammars) is only fetched when a
 // file is actually opened for editing, not on initial app load.
@@ -174,6 +175,7 @@ export function FileManagerTab({
   onExtractFile,
   extractStatus,
 }: FileManagerTabProps) {
+  const { t } = useLanguage();
   const isExtracting = extractStatus?.status === 'running';
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -279,7 +281,7 @@ export function FileManagerTab({
             tone="ghost"
             onClick={() => setCurrentPath('/')}
             className="flex h-6 w-6 min-w-0 !min-h-0 flex-shrink-0 items-center justify-center rounded p-0 transition-colors hover:bg-gray-700 text-[var(--color-cyan-400)]"
-            title="Root"
+            title={t('files.root', 'Root')}
           >
             <Home className="w-3.5 h-3.5" />
           </AppButton>
@@ -319,7 +321,7 @@ export function FileManagerTab({
             tone="ghost"
             onClick={() => loadFiles(currentPath)}
             className="h-7 w-7 min-w-0 !min-h-0 rounded p-0 transition-colors hover:bg-gray-700 text-gray-400 hover:text-white"
-            title="Refresh"
+            title={t('files.refresh', 'Refresh')}
           >
             <RefreshCw className="w-3 h-3" />
           </AppButton>
@@ -329,7 +331,7 @@ export function FileManagerTab({
             className={`h-7 w-7 min-w-0 !min-h-0 rounded p-0 transition-colors ${
               showHidden ? 'bg-gray-700 text-[var(--color-cyan-400)]' : 'hover:bg-gray-700 text-gray-400 hover:text-white'
             }`}
-            title={showHidden ? 'Hide hidden files' : 'Show hidden files'}
+            title={showHidden ? t('files.hideHidden', 'Hide hidden files') : t('files.showHidden', 'Show hidden files')}
           >
             {showHidden ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
           </AppButton>
@@ -340,7 +342,7 @@ export function FileManagerTab({
             className={`h-7 w-7 min-w-0 !min-h-0 rounded p-0 transition-colors ${
               canWriteFiles ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'text-gray-600 cursor-not-allowed'
             }`}
-            title="New Folder"
+            title={t('files.newFolder', 'New Folder')}
           >
             <FolderPlus className="w-3 h-3" />
           </AppButton>
@@ -351,7 +353,7 @@ export function FileManagerTab({
             className={`h-7 w-7 min-w-0 !min-h-0 rounded p-0 transition-colors ${
               canWriteFiles ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'text-gray-600 cursor-not-allowed'
             }`}
-            title="New File"
+            title={t('files.newFile', 'New File')}
           >
             <FilePlus className="w-3 h-3" />
           </AppButton>
@@ -363,7 +365,7 @@ export function FileManagerTab({
               className={`h-7 w-7 min-w-0 !min-h-0 rounded p-0 transition-colors ${
                 canWriteFiles ? 'hover:bg-gray-700 text-gray-400 hover:text-white' : 'text-gray-600 cursor-not-allowed'
               }`}
-              title="Upload files"
+              title={t('files.upload', 'Upload files')}
             >
               <Upload className="w-3 h-3" />
             </AppButton>
@@ -396,7 +398,7 @@ export function FileManagerTab({
             className={`h-7 w-7 min-w-0 !min-h-0 rounded p-0 transition-all ${
               copyPathSuccess ? 'bg-green-500/20 text-green-400' : 'hover:bg-gray-700 text-gray-400 hover:text-white'
             }`}
-            title={copyPathSuccess ? 'Copied!' : 'Copy path'}
+            title={copyPathSuccess ? t('files.copied', 'Copied!') : t('files.copyPath', 'Copy path')}
           >
             {copyPathSuccess ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
           </AppButton>
@@ -409,13 +411,13 @@ export function FileManagerTab({
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-blue-500/10 border-2 border-dashed border-blue-400 rounded-lg m-1 pointer-events-none">
             <div className="text-center text-blue-400">
               <Upload className="w-10 h-10 mx-auto mb-2" />
-              <p className="font-medium text-sm">Drop files to upload</p>
+              <p className="font-medium text-sm">{t('files.dropUpload', 'Drop files to upload')}</p>
             </div>
           </div>
         )}
 
         <div className="space-y-0.5">
-          {filesLoading && <div className={`text-sm px-2 py-1 ${textSecondary}`}>Loading files...</div>}
+          {filesLoading && <div className={`text-sm px-2 py-1 ${textSecondary}`}>{t('files.loading', 'Loading files...')}</div>}
           {filesError && <div className="text-sm px-2 py-1 text-red-400">{filesError}</div>}
 
           {!filesLoading &&
@@ -561,7 +563,7 @@ export function FileManagerTab({
                                 ? 'hover:bg-amber-500/20 text-amber-400 hover:text-amber-300'
                                 : 'text-gray-600 cursor-not-allowed'
                             }`}
-                            title="Extract archive"
+                            title={t('files.extract', 'Extract archive')}
                           >
                             {isExtracting && extractStatus?.name === file.name
                               ? <Loader2 className="w-3 h-3 animate-spin" />
@@ -577,7 +579,7 @@ export function FileManagerTab({
                               ? 'hover:bg-cyan-500/20 text-cyan-400 hover:text-cyan-300'
                               : 'text-gray-600 cursor-not-allowed'
                           }`}
-                          title="Download"
+                          title={t('files.download', 'Download')}
                         >
                           <Download className="w-3 h-3" />
                         </AppButton>
@@ -590,7 +592,7 @@ export function FileManagerTab({
                               ? 'hover:bg-blue-500/20 text-blue-400 hover:text-blue-300'
                               : 'text-gray-600 cursor-not-allowed'
                           }`}
-                          title="Rename"
+                          title={t('files.rename', 'Rename')}
                         >
                           <Edit2 className="w-3 h-3" />
                         </AppButton>
@@ -603,7 +605,7 @@ export function FileManagerTab({
                               ? 'hover:bg-red-500/20 text-red-400 hover:text-red-300'
                               : 'text-gray-600 cursor-not-allowed'
                           }`}
-                          title="Delete"
+                          title={t('files.delete', 'Delete')}
                         >
                           <Trash2 className="w-3 h-3" />
                         </AppButton>
@@ -622,7 +624,7 @@ export function FileManagerTab({
         {canWriteFiles && onUploadFiles && !isDragActive && (
           <div className="flex items-center justify-center gap-1.5 mt-3 mb-1 text-[11px] text-gray-600 select-none pointer-events-none">
             <Upload className="w-3 h-3" />
-            <span>Drag &amp; drop files here to upload</span>
+            <span>{t('files.dragUpload', 'Drag & drop files here to upload')}</span>
           </div>
         )}
       </div>
@@ -683,7 +685,7 @@ export function FileManagerTab({
                 {item.name}
               </span>
               {item.error ? (
-                <span className="text-red-400 flex-shrink-0 text-[10px]">Failed</span>
+                <span className="text-red-400 flex-shrink-0 text-[10px]">{t('files.failed', 'Failed')}</span>
               ) : item.done ? (
                 <Check className="w-3 h-3 text-green-400 flex-shrink-0" />
               ) : (
@@ -722,7 +724,7 @@ export function FileManagerTab({
                   className="flex items-center gap-1.5 rounded px-2.5 py-1.5 text-xs transition-colors bg-gray-700 hover:bg-gray-600 text-white"
                 >
                   <Copy className="h-3.5 w-3.5" />
-                  {copyContentSuccess ? 'Copied' : 'Copy'}
+                  {copyContentSuccess ? t('files.copied', 'Copied') : t('files.copy', 'Copy')}
                 </AppButton>
                 <AppButton
                   onClick={handleDownloadFile}
@@ -741,13 +743,13 @@ export function FileManagerTab({
                   }`}
                 >
                   <Save className="h-3.5 w-3.5" />
-                  {savingFile ? 'Saving...' : 'Save'}
+                  {savingFile ? t('common.saving', 'Saving...') : t('files.save', 'Save')}
                 </AppButton>
                 <AppButton
                   tone="ghost"
                   onClick={closeEditorModal}
                   className={`h-8 w-8 flex items-center justify-center rounded p-0 transition-colors hover:bg-gray-700 ${textSecondary} hover:text-red-400`}
-                  title="Close"
+                  title={t('files.close', 'Close')}
                 >
                   <X className="h-4 w-4" />
                 </AppButton>
@@ -757,11 +759,11 @@ export function FileManagerTab({
             {/* Modal content */}
             <div className="min-h-0 flex-1 flex flex-col overflow-hidden">
               {fileLoading ? (
-                <div className={`p-4 text-sm ${textSecondary}`}>Loading file...</div>
+                <div className={`p-4 text-sm ${textSecondary}`}>{t('files.loadingFile', 'Loading file...')}</div>
               ) : (
                 <div className="flex-1 overflow-hidden">
                   <Suspense
-                    fallback={<div className={`p-4 text-sm ${textSecondary}`}>Loading editor…</div>}
+                    fallback={<div className={`p-4 text-sm ${textSecondary}`}>{t('files.loadingEditor', 'Loading editor…')}</div>}
                   >
                     <CodeEditor
                       value={fileContent}

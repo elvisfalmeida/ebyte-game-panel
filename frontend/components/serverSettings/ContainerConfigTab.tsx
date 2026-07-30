@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Plus, Trash2, Save, AlertTriangle, Loader2, RefreshCw, X } from 'lucide-react';
 import { AppButton } from '../../src/ui/components';
 import { apiClient } from '../../utils/api';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 type PortEntry = { host: string; container: string; label: string };
 type EnvEntry = { key: string; value: string };
@@ -160,6 +161,7 @@ export function ContainerConfigTab({
   canManageEnv,
   onSaved,
 }: ContainerConfigTabProps) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -220,7 +222,7 @@ export function ContainerConfigTab({
       .getServer(serverId)
       .then(applyLoaded)
       .catch((err: any) => {
-        setError(err?.response?.data?.error || err?.message || 'Failed to load server config');
+        setError(err?.response?.data?.error || err?.message || t('container.loadError', 'Failed to load server config'));
       })
       .finally(() => setLoading(false));
   }, [serverId]);
@@ -265,7 +267,7 @@ export function ContainerConfigTab({
       onSaved?.();
       setTimeout(() => setSuccess(false), 4000);
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.message || 'Failed to save config');
+      setError(err?.response?.data?.error || err?.message || t('container.saveError', 'Failed to save config'));
     } finally {
       setSaving(false);
     }
@@ -312,9 +314,9 @@ export function ContainerConfigTab({
     <div className="h-full overflow-y-auto p-4 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
-          <h3 className={`text-2xl font-bold ${textPrimary} mb-1`}>Container Config</h3>
+          <h3 className={`text-2xl font-bold ${textPrimary} mb-1`}>{t('container.title', 'Container Config')}</h3>
           <p className={`text-sm ${textSecondary}`}>
-            Ports, environment variables, mounts and healthcheck. Saving will recreate the Docker container.
+            {t('container.description', 'Ports, environment variables, mounts and healthcheck. Saving will recreate the Docker container.')}
           </p>
         </div>
 
@@ -322,7 +324,7 @@ export function ContainerConfigTab({
         {/* Docker Image (informational — read-only, shown first) */}
         {dockerImage && (
           <div className={`${contentBg} border ${borderColor} rounded-lg p-4 sm:p-6`}>
-            <h4 className={`text-base font-semibold ${textPrimary} mb-3`}>Docker Image</h4>
+            <h4 className={`text-base font-semibold ${textPrimary} mb-3`}>{t('container.image', 'Docker Image')}</h4>
             <code className="block w-full rounded bg-[#1f2937] text-gray-400 text-sm px-3 py-2 font-mono break-all select-all">
               {dockerImage}
             </code>
@@ -331,7 +333,7 @@ export function ContainerConfigTab({
 
         {/* Ports */}
         <div className={`${contentBg} border ${borderColor} rounded-lg p-4 sm:p-6`}>
-          <h4 className={`text-base font-semibold ${textPrimary} mb-4`}>Ports</h4>
+          <h4 className={`text-base font-semibold ${textPrimary} mb-4`}>{t('container.ports', 'Ports')}</h4>
 
           <div className="space-y-5">
             <PortsSection
@@ -361,16 +363,16 @@ export function ContainerConfigTab({
 
         {/* Volumes */}
         <div className={`${contentBg} border ${borderColor} rounded-lg p-4 sm:p-6`}>
-          <h4 className={`text-base font-semibold ${textPrimary} mb-4`}>Volumes</h4>
+          <h4 className={`text-base font-semibold ${textPrimary} mb-4`}>{t('container.volumes', 'Volumes')}</h4>
           <div className={sectionClass}>
             {mounts.length === 0 && (
-              <p className={`text-sm ${textSecondary}`}>No mounts configured.</p>
+              <p className={`text-sm ${textSecondary}`}>{t('container.noMounts', 'No mounts configured.')}</p>
             )}
             {mounts.length > 0 && (
               <div className="flex gap-2 items-center">
-                <span className={`flex-1 text-xs font-medium ${textSecondary}`}>Name</span>
+                <span className={`flex-1 text-xs font-medium ${textSecondary}`}>{t('container.name', 'Name')}</span>
                 <span className="text-sm flex-shrink-0 invisible">→</span>
-                <span className={`flex-[2] text-xs font-medium ${textSecondary}`}>Container path</span>
+                <span className={`flex-[2] text-xs font-medium ${textSecondary}`}>{t('container.path', 'Container path')}</span>
                 {canEdit && (
                   <span className="p-1.5 flex-shrink-0 invisible" aria-hidden><Trash2 className="w-4 h-4" /></span>
                 )}
@@ -411,7 +413,7 @@ export function ContainerConfigTab({
                 className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded border border-dashed ${borderColor} text-gray-400 hover:text-white hover:bg-gray-700 transition-colors`}
               >
                 <Plus className="w-4 h-4" />
-                Add volume
+                {t('container.addVolume', 'Add volume')}
               </AppButton>
             )}
           </div>
@@ -420,10 +422,10 @@ export function ContainerConfigTab({
         {/* Environment Variables — only rendered with `server.env` */}
         {canManageEnv && (
         <div className={`${contentBg} border ${borderColor} rounded-lg p-4 sm:p-6`}>
-          <h4 className={`text-base font-semibold ${textPrimary} mb-4`}>Environment Variables</h4>
+          <h4 className={`text-base font-semibold ${textPrimary} mb-4`}>{t('container.environment', 'Environment Variables')}</h4>
           <div className={sectionClass}>
             {envEntries.length === 0 && (
-              <p className={`text-sm ${textSecondary}`}>No variables configured.</p>
+              <p className={`text-sm ${textSecondary}`}>{t('container.noVariables', 'No variables configured.')}</p>
             )}
             {envEntries.map((entry, idx) => (
               <div key={idx} className="flex gap-2 items-center">
@@ -460,7 +462,7 @@ export function ContainerConfigTab({
                 className={`flex items-center gap-2 text-sm px-3 py-1.5 rounded border border-dashed ${borderColor} text-gray-400 hover:text-white hover:bg-gray-700 transition-colors`}
               >
                 <Plus className="w-4 h-4" />
-                Add variable
+                {t('container.addVariable', 'Add variable')}
               </AppButton>
             )}
           </div>
@@ -469,9 +471,9 @@ export function ContainerConfigTab({
 
         {/* Resource Limits */}
         <div className={`${contentBg} border ${borderColor} rounded-lg p-4 sm:p-6`}>
-          <h4 className={`text-base font-semibold ${textPrimary} mb-1`}>Resource Limits</h4>
+          <h4 className={`text-base font-semibold ${textPrimary} mb-1`}>{t('container.resourceLimits', 'Resource Limits')}</h4>
           <p className={`text-xs ${textSecondary} mb-4`}>
-            Leave blank for no limit. Changes apply immediately without restarting the server.
+            {t('container.resourceLimitsHint', 'Leave blank for no limit. Changes apply immediately without restarting the server.')}
           </p>
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -528,45 +530,45 @@ export function ContainerConfigTab({
 
         {/* Healthcheck */}
         <div className={`${contentBg} border ${borderColor} rounded-lg p-4 sm:p-6`}>
-          <h4 className={`text-base font-semibold ${textPrimary} mb-4`}>Healthcheck</h4>
+          <h4 className={`text-base font-semibold ${textPrimary} mb-4`}>{t('container.healthcheck', 'Healthcheck')}</h4>
           <div className="space-y-4">
             <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm text-amber-600 dark:text-amber-300">
               <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <span>A wrong probe can leave the server stuck as <strong>unhealthy</strong> or never finish starting. Keep <strong>Image default</strong> unless you know the image&apos;s listening port or main process.</span>
+              <span>{t('container.healthcheckWarning', 'A wrong probe can leave the server stuck as unhealthy or never finish starting. Keep Image default unless you know the image listening port or main process.')}</span>
             </div>
             <div>
-              <label className={`block text-sm ${textSecondary} mb-1`}>Mode</label>
+              <label className={`block text-sm ${textSecondary} mb-1`}>{t('container.mode', 'Mode')}</label>
               <select
                 className={`${inputClass}`}
                 value={healthcheck.mode}
                 onChange={e => setHc({ mode: e.target.value as HealthcheckMode })}
                 disabled={!canEdit}
               >
-                <option value="image_default">Image default</option>
-                <option value="disabled">Disabled</option>
-                <option value="override">Override</option>
+                <option value="image_default">{t('container.imageDefault', 'Image default')}</option>
+                <option value="disabled">{t('container.disabled', 'Disabled')}</option>
+                <option value="override">{t('container.override', 'Override')}</option>
               </select>
             </div>
 
             {healthcheck.mode === 'override' && (
               <div className="space-y-4">
                 <div>
-                  <label className={`block text-sm ${textSecondary} mb-1`}>Type</label>
+                  <label className={`block text-sm ${textSecondary} mb-1`}>{t('container.type', 'Type')}</label>
                   <select
                     className={`${inputClass}`}
                     value={healthcheck.overrideType}
                     onChange={e => setHc({ overrideType: e.target.value as HealthcheckOverrideType })}
                     disabled={!canEdit}
                   >
-                    <option value="tcp_connect">TCP connect</option>
-                    <option value="process">Process</option>
-                    <option value="command">Command</option>
+                    <option value="tcp_connect">{t('container.tcpConnect', 'TCP connect')}</option>
+                    <option value="process">{t('container.process', 'Process')}</option>
+                    <option value="command">{t('container.command', 'Command')}</option>
                   </select>
                 </div>
 
                 {healthcheck.overrideType === 'tcp_connect' && (
                   <div>
-                    <label className={`block text-sm ${textSecondary} mb-1`}>Port</label>
+                    <label className={`block text-sm ${textSecondary} mb-1`}>{t('container.port', 'Port')}</label>
                     <input
                       type="number"
                       className={inputClass}
@@ -580,7 +582,7 @@ export function ContainerConfigTab({
 
                 {healthcheck.overrideType === 'process' && (
                   <div>
-                    <label className={`block text-sm ${textSecondary} mb-1`}>Process name</label>
+                    <label className={`block text-sm ${textSecondary} mb-1`}>{t('container.processName', 'Process name')}</label>
                     <input
                       className={inputClass}
                       placeholder="e.g. srcds"
@@ -593,7 +595,7 @@ export function ContainerConfigTab({
 
                 {healthcheck.overrideType === 'command' && (
                   <div>
-                    <label className={`block text-sm ${textSecondary} mb-1`}>Command (space-separated args)</label>
+                    <label className={`block text-sm ${textSecondary} mb-1`}>{t('container.commandArgs', 'Command (space-separated args)')}</label>
                     <input
                       className={inputClass}
                       placeholder='e.g. curl -f http://localhost:8080/health'
@@ -606,7 +608,7 @@ export function ContainerConfigTab({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className={`block text-sm ${textSecondary} mb-1`}>Interval (s)</label>
+                    <label className={`block text-sm ${textSecondary} mb-1`}>{t('container.interval', 'Interval (s)')}</label>
                     <input
                       type="number"
                       className={inputClass}
@@ -616,7 +618,7 @@ export function ContainerConfigTab({
                     />
                   </div>
                   <div>
-                    <label className={`block text-sm ${textSecondary} mb-1`}>Timeout (s)</label>
+                    <label className={`block text-sm ${textSecondary} mb-1`}>{t('container.timeout', 'Timeout (s)')}</label>
                     <input
                       type="number"
                       className={inputClass}
@@ -626,7 +628,7 @@ export function ContainerConfigTab({
                     />
                   </div>
                   <div>
-                    <label className={`block text-sm ${textSecondary} mb-1`}>Start period (s)</label>
+                    <label className={`block text-sm ${textSecondary} mb-1`}>{t('container.startPeriod', 'Start period (s)')}</label>
                     <input
                       type="number"
                       className={inputClass}
@@ -636,7 +638,7 @@ export function ContainerConfigTab({
                     />
                   </div>
                   <div>
-                    <label className={`block text-sm ${textSecondary} mb-1`}>Retries</label>
+                    <label className={`block text-sm ${textSecondary} mb-1`}>{t('container.retries', 'Retries')}</label>
                     <input
                       type="number"
                       className={inputClass}
@@ -660,7 +662,7 @@ export function ContainerConfigTab({
         )}
         {success && (
           <div className="text-sm text-green-400 bg-green-400/10 border border-green-400/30 rounded-lg px-4 py-3">
-            Container config saved. The container will be recreated.
+            {t('container.saved', 'Container config saved. The container will be recreated.')}
           </div>
         )}
         {canEdit && (
@@ -672,7 +674,7 @@ export function ContainerConfigTab({
               className="flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium disabled:opacity-60"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {saving ? 'Saving…' : 'Save container config'}
+              {saving ? t('common.saving', 'Saving…') : t('container.save', 'Save container config')}
             </AppButton>
           </div>
         )}
@@ -686,7 +688,7 @@ export function ContainerConfigTab({
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-500/15">
                   <RefreshCw className="h-4 w-4 text-amber-500" />
                 </div>
-                <h3 className={`text-base font-semibold ${textPrimary}`}>Restart required</h3>
+                <h3 className={`text-base font-semibold ${textPrimary}`}>{t('container.restartRequired', 'Restart required')}</h3>
               </div>
               <AppButton
                 onClick={() => setShowRestartConfirm(false)}
@@ -698,11 +700,11 @@ export function ContainerConfigTab({
 
             <div className="px-6 py-5 space-y-4">
               <p className={`text-sm ${textSecondary}`}>
-                Saving the container configuration will <span className={`font-medium ${textPrimary}`}>immediately restart the server</span>. Any ongoing game session will be interrupted.
+                {t('container.restartDescription', 'Saving the container configuration will immediately restart the server. Any ongoing game session will be interrupted.')}
               </p>
               <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-400">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>Make sure players are warned before proceeding.</span>
+                <span>{t('container.warnPlayers', 'Make sure players are warned before proceeding.')}</span>
               </div>
             </div>
 
@@ -711,7 +713,7 @@ export function ContainerConfigTab({
                 onClick={() => setShowRestartConfirm(false)}
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${textSecondary} hover:bg-gray-100 dark:hover:bg-white/10`}
               >
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </AppButton>
               <AppButton
                 onClick={() => { setShowRestartConfirm(false); void handleSave(); }}
@@ -719,7 +721,7 @@ export function ContainerConfigTab({
                 className="flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white hover:bg-amber-600 disabled:opacity-60 transition-colors"
               >
                 <RefreshCw className="h-4 w-4" />
-                Confirm &amp; restart
+                {t('container.confirmRestart', 'Confirm & restart')}
               </AppButton>
             </div>
           </div>

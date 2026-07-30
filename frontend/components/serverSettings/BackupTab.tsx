@@ -13,6 +13,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface BackupItem {
   name: string;
@@ -110,6 +111,7 @@ export function BackupTab({
   backupsNotSupported,
   hideManualBackup = false,
 }: BackupTabProps) {
+  const { t, locale } = useLanguage();
   const [renamingPath, setRenamingPath] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
 
@@ -136,9 +138,9 @@ export function BackupTab({
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className={`text-2xl font-bold ${textPrimary} mb-2`}>Backups</h3>
+            <h3 className={`text-2xl font-bold ${textPrimary} mb-2`}>{t('backups.title', 'Backups')}</h3>
             <p className={`text-sm ${textSecondary}`}>
-              Manage and download backups for {serverName}
+              {t('backups.description', `Manage and download backups for ${serverName}`, { server: serverName })}
             </p>
           </div>
           {!backupsNotSupported && !hideManualBackup && (
@@ -149,7 +151,7 @@ export function BackupTab({
               className="flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium disabled:opacity-60 w-full sm:w-auto flex-shrink-0"
             >
               <Download className="w-5 h-5" />
-              <span>{backupNowLoading ? 'Creating backup...' : 'Create backup now'}</span>
+              <span>{backupNowLoading ? t('backups.creating', 'Creating backup...') : t('backups.create', 'Create backup now')}</span>
             </AppButton>
           )}
         </div>
@@ -159,9 +161,9 @@ export function BackupTab({
           <div className="flex items-start gap-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
             <AlertTriangle className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className={`text-sm font-medium ${textPrimary}`}>Backups not supported</p>
+              <p className={`text-sm font-medium ${textPrimary}`}>{t('backups.unsupported', 'Backups not supported')}</p>
               <p className={`text-xs ${textSecondary} mt-1`}>
-                This server type does not support backups.
+                {t('backups.unsupportedDescription', 'This server type does not support backups.')}
               </p>
             </div>
           </div>
@@ -170,16 +172,16 @@ export function BackupTab({
         {/* Retention Policy — LinuxGSM only */}
         {isLinuxGSMGame && (
           <div className={`${contentBg} border ${borderColor} rounded-lg p-4 sm:p-6 space-y-6 sm:space-y-8`}>
-            <h4 className={`text-lg font-semibold ${textPrimary}`}>Retention Policy</h4>
+            <h4 className={`text-lg font-semibold ${textPrimary}`}>{t('backups.retention', 'Retention Policy')}</h4>
             {backupSettingsError && <div className="text-sm text-red-400">{backupSettingsError}</div>}
             <div className="space-y-5">
               <div className={`p-4 rounded-lg border ${borderColor} bg-gray-50 dark:bg-gray-900/30 space-y-3`}>
                 <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 items-start">
-                  <label className={`block text-sm font-medium ${textPrimary}`}>Keep the last backups</label>
+                  <label className={`block text-sm font-medium ${textPrimary}`}>{t('backups.keepLast', 'Keep the last backups')}</label>
                   <span className="text-sm font-semibold text-[var(--color-cyan-400)] text-right">
-                    {backupRetention === 0 ? 'Unlimited' : `${backupRetention} backups`}
+                    {backupRetention === 0 ? t('backups.unlimited', 'Unlimited') : t('backups.count', `${backupRetention} backups`, { count: backupRetention })}
                   </span>
-                  <p className={`text-xs ${textSecondary} col-span-2`}>Set 0 to keep all backups.</p>
+                  <p className={`text-xs ${textSecondary} col-span-2`}>{t('backups.keepLastHint', 'Set 0 to keep all backups.')}</p>
                   <div className="col-span-2">
                     <AppSlider
                       min={0} max={30} value={backupRetention}
@@ -188,7 +190,7 @@ export function BackupTab({
                     <div className={`mt-2 grid grid-cols-3 items-center text-[11px] ${textSecondary}`}>
                       <span className="text-left">0</span>
                       <span className={`text-center text-xs font-semibold ${textPrimary}`}>
-                        {backupRetention === 0 ? 'Unlimited' : backupRetention}
+                        {backupRetention === 0 ? t('backups.unlimited', 'Unlimited') : backupRetention}
                       </span>
                       <span className="text-right">30</span>
                     </div>
@@ -198,11 +200,11 @@ export function BackupTab({
 
               <div className={`p-4 rounded-lg border ${borderColor} bg-gray-50 dark:bg-gray-900/30 space-y-3`}>
                 <div className="grid grid-cols-[1fr_auto] gap-x-4 gap-y-1 items-start">
-                  <label className={`block text-sm font-medium ${textPrimary}`}>Keep backups for days</label>
+                  <label className={`block text-sm font-medium ${textPrimary}`}>{t('backups.keepDays', 'Keep backups for days')}</label>
                   <span className="text-sm font-semibold text-[var(--color-cyan-400)] text-right">
-                    {backupRetentionDays === 0 ? 'Unlimited' : `${backupRetentionDays} days`}
+                    {backupRetentionDays === 0 ? t('backups.unlimited', 'Unlimited') : t('backups.days', `${backupRetentionDays} days`, { count: backupRetentionDays })}
                   </span>
-                  <p className={`text-xs ${textSecondary} col-span-2`}>Set 0 to keep backups forever.</p>
+                  <p className={`text-xs ${textSecondary} col-span-2`}>{t('backups.keepForeverHint', 'Set 0 to keep backups forever.')}</p>
                   <div className="col-span-2">
                     <AppSlider
                       min={0} max={90} value={backupRetentionDays}
@@ -211,7 +213,7 @@ export function BackupTab({
                     <div className={`mt-2 grid grid-cols-3 items-center text-[11px] ${textSecondary}`}>
                       <span className="text-left">0</span>
                       <span className={`text-center text-xs font-semibold ${textPrimary}`}>
-                        {backupRetentionDays === 0 ? 'Unlimited' : backupRetentionDays}
+                        {backupRetentionDays === 0 ? t('backups.unlimited', 'Unlimited') : backupRetentionDays}
                       </span>
                       <span className="text-right">90</span>
                     </div>
@@ -221,11 +223,11 @@ export function BackupTab({
 
               <div className={toggleRowClass}>
                 <div>
-                  <p className={`text-sm font-medium ${textPrimary}`}>Stop server before backup</p>
-                  <p className={`text-xs ${textSecondary}`}>Recommended for consistent saves.</p>
+                  <p className={`text-sm font-medium ${textPrimary}`}>{t('backups.stopBefore', 'Stop server before backup')}</p>
+                  <p className={`text-xs ${textSecondary}`}>{t('backups.stopBeforeDescription', 'Recommended for consistent saves.')}</p>
                 </div>
                 <AppToggle
-                  ariaLabel="Stop server before backup"
+                  ariaLabel={t('backups.stopBefore', 'Stop server before backup')}
                   checked={stopOnBackup}
                   size="standard"
                   onChange={setStopOnBackup}
@@ -242,7 +244,7 @@ export function BackupTab({
                 className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium w-full sm:w-auto flex-shrink-0 disabled:opacity-60"
               >
                 <Save className="w-5 h-5" />
-                <span>{backupSaving ? 'Saving...' : 'Save retention settings'}</span>
+                <span>{backupSaving ? t('common.saving', 'Saving...') : t('backups.saveRetention', 'Save retention settings')}</span>
               </AppButton>
             </div>
           </div>
@@ -253,24 +255,24 @@ export function BackupTab({
           <div className={`${contentBg} border ${borderColor} rounded-lg p-4 sm:p-6 space-y-3 sm:space-y-4`}>
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
               <div>
-                <h4 className={`text-lg font-semibold ${textPrimary} mb-1`}>Available Backups</h4>
-                <p className={`text-sm ${textSecondary}`}>{isLinuxGSMGame ? 'Download or delete your server backups' : 'Download, restore or delete your server backups'}</p>
+                <h4 className={`text-lg font-semibold ${textPrimary} mb-1`}>{t('backups.available', 'Available Backups')}</h4>
+                <p className={`text-sm ${textSecondary}`}>{isLinuxGSMGame ? t('backups.availableLinux', 'Download or delete your server backups') : t('backups.availableFull', 'Download, restore or delete your server backups')}</p>
               </div>
               <AppButton
                 onClick={() => loadBackups()}
                 className="flex items-center justify-center gap-2 px-3 py-2 rounded text-sm transition-colors bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white w-full sm:w-auto"
               >
                 <RefreshCw className="w-4 h-4" />
-                Refresh
+                {t('backups.refresh', 'Refresh')}
               </AppButton>
             </div>
 
             {backupsError && <div className="text-sm text-red-400">{backupsError}</div>}
 
             <div className="space-y-3">
-              {backupsLoading && <div className={`text-sm ${textSecondary}`}>Loading backups...</div>}
+              {backupsLoading && <div className={`text-sm ${textSecondary}`}>{t('backups.loading', 'Loading backups...')}</div>}
               {!backupsLoading && backups.length === 0 && (
-                <div className={`text-sm ${textSecondary}`}>No backups found.</div>
+                <div className={`text-sm ${textSecondary}`}>{t('backups.none', 'No backups found.')}</div>
               )}
               {!backupsLoading && backups.map((backup) => (
                 <div
@@ -330,7 +332,7 @@ export function BackupTab({
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
                           <span className="whitespace-nowrap">
-                            {new Date(backup.modifiedAt).toLocaleString()}
+                            {new Date(backup.modifiedAt).toLocaleString(locale)}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
@@ -348,7 +350,7 @@ export function BackupTab({
                       className="flex items-center justify-center gap-2 px-4 py-2.5 whitespace-nowrap w-full sm:w-auto"
                     >
                       <Download className="w-4 h-4" />
-                      {backupDownloadLoading === backup.name ? 'Downloading...' : 'Download'}
+                      {backupDownloadLoading === backup.name ? t('backups.downloading', 'Downloading...') : t('backups.download', 'Download')}
                     </AppButton>
                     {canRestoreBackups && !isLinuxGSMGame && (
                       <AppButton
@@ -358,7 +360,7 @@ export function BackupTab({
                         className="flex items-center justify-center gap-2 px-4 py-2.5 whitespace-nowrap w-full sm:w-auto border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
                       >
                         <RotateCcw className="w-4 h-4" />
-                        {backupRestoreLoading === backup.name ? 'Restoring...' : 'Restore'}
+                        {backupRestoreLoading === backup.name ? t('backups.restoring', 'Restoring...') : t('backups.restore', 'Restore')}
                       </AppButton>
                     )}
                     <AppButton
@@ -368,7 +370,7 @@ export function BackupTab({
                       className="flex items-center justify-center gap-2 px-4 py-2.5 whitespace-nowrap w-full sm:w-auto"
                     >
                       <Trash2 className="w-4 h-4" />
-                      {backupDeleteLoading === backup.name ? 'Deleting...' : 'Delete'}
+                      {backupDeleteLoading === backup.name ? t('backups.deleting', 'Deleting...') : t('backups.delete', 'Delete')}
                     </AppButton>
                   </div>
                 </div>

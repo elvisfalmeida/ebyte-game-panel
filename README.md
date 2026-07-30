@@ -89,6 +89,13 @@ During installation, you'll be prompted for:
 
 Once installed, your panel is live at **`https://<your-domain>`** 🎉
 
+## 🌐 Languages
+
+The panel detects the browser language on the first visit and provides a
+persistent English / Brazilian Portuguese selector. Core server-management
+screens use structured translation keys; a compatibility bridge covers legacy
+and dynamically injected interface fragments. English is the fallback.
+
 > 📡 OVHcloud Game Panel sends usage telemetry by default. You can disable it at install with `--telemetry-disabled`. See [docs/TELEMETRY.md](docs/TELEMETRY.md).
 
 ## 🏗️ Architecture

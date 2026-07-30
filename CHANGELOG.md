@@ -10,6 +10,9 @@
   login, sidebar, mobile header, and browser title.
 - **Legacy translation bridge** — translates remaining settings, user
   administration, dynamic modals, validation controls, and accessibility labels.
+- **Structured server-tool translations** — Scheduled Tasks, Terminal, Backups,
+  File Manager, and Container Configuration now use native translation keys for
+  actions, empty states, warnings, validation, status, and dynamic labels.
 - **Internationalization** — browser-language detection, a persistent language
   selector, English fallback, and Brazilian Portuguese for the login,
   navigation, server settings shell, and Palworld settings workflow.

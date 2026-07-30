@@ -10,6 +10,10 @@
   login, barra lateral, cabeçalho mobile e título do navegador.
 - **Camada de tradução legada** — cobre configurações, administração de usuários,
   modais dinâmicos e controles de acessibilidade restantes.
+- **Tradução estruturada das ferramentas do servidor** — Tarefas agendadas,
+  Terminal, Backups, Gerenciador de arquivos e Configuração do contêiner agora
+  usam chaves nativas em ações, estados vazios, avisos, validações, status e
+  rótulos dinâmicos.
 - Interface multilíngue com detecção do navegador, seletor persistente, inglês
   como fallback e português do Brasil.
 - Traduções do login, navegação principal, modal de configurações e tela de
