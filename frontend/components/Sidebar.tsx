@@ -215,6 +215,7 @@ export function Sidebar({
     { id: 'admin-users', label: t('nav.users', 'User Administration'), iconName: 'user', disabled: !canManageUsers },
     { id: 'resources', label: t('nav.resources', 'Resources'), iconName: 'book' },
     { id: 'panel-content', label: t('nav.panelContent', 'Panel content'), iconName: 'book', disabled: !currentUser?.isRoot },
+    { id: 'audit-notifications', label: t('nav.auditNotifications', 'Audit and alerts'), iconName: 'key', disabled: !currentUser?.isRoot },
   ];
 
   return (

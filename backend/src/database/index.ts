@@ -11,6 +11,9 @@ import {
     FileTransferJobRepository,
     ScheduledTaskRepository,
     PanelUpdateJobRepository,
+    AuditRepository,
+    NotificationRepository,
+    NotificationSettingsRepository,
 } from './repositories.js';
 
 export const userRepository = new UserRepository();
@@ -25,3 +28,6 @@ export const linuxGsmCatalogRepository = new LinuxGsmCatalogRepository();
 export const fileTransferJobRepository = new FileTransferJobRepository();
 export const scheduledTaskRepository = new ScheduledTaskRepository();
 export const panelUpdateJobRepository = new PanelUpdateJobRepository();
+export const auditRepository = new AuditRepository();
+export const notificationRepository = new NotificationRepository();
+export const notificationSettingsRepository = new NotificationSettingsRepository();

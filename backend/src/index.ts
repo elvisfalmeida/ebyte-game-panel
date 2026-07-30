@@ -15,6 +15,8 @@ import serverRoutes from './routes/servers.js';
 import systemRoutes from './routes/system.js';
 import catalogRoutes from './routes/catalog.js';
 import panelContentRoutes from './routes/panelContent.js';
+import auditRoutes from './routes/audit.js';
+import { auditHttpMutation } from './middleware/audit.js';
 import { setupWebSocket } from './websocket/handler.js';
 import { getAppVersion } from './utils/appInfo.js';
 import { logError, logInfo } from './utils/logger.js';
@@ -82,17 +84,19 @@ app.use(express.urlencoded({ extended: true, limit: API_BODY_LIMIT }));
 // /api/auth
 app.use('/api/auth', authRoutes);
 // /api/users
-app.use('/api/users', authMiddleware, userRoutes);
+app.use('/api/users', authMiddleware, auditHttpMutation, userRoutes);
 // /api/servers/:id/members
-app.use('/api/servers', authMiddleware, serverMembersRoutes);
+app.use('/api/servers', authMiddleware, auditHttpMutation, serverMembersRoutes);
 // /api/servers
-app.use('/api/servers', authMiddleware, serverRoutes);
+app.use('/api/servers', authMiddleware, auditHttpMutation, serverRoutes);
 // /api/catalog
-app.use('/api/catalog', authMiddleware, catalogRoutes);
+app.use('/api/catalog', authMiddleware, auditHttpMutation, catalogRoutes);
 // /api/system
-app.use('/api/system', authMiddleware, systemRoutes);
+app.use('/api/system', authMiddleware, auditHttpMutation, systemRoutes);
 // /api/panel-content (root administration)
-app.use('/api/panel-content', authMiddleware, panelContentRoutes);
+app.use('/api/panel-content', authMiddleware, auditHttpMutation, panelContentRoutes);
+// /api/audit, /api/notifications and /api/notification-settings (root administration)
+app.use('/api', authMiddleware, auditHttpMutation, auditRoutes);
 
 // GET /api/health
 app.get('/api/health', (_req: Request, res: Response) => {

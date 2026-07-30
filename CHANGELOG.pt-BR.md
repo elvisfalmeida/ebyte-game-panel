@@ -6,6 +6,9 @@
 
 ### Adicionado
 
+- **Auditoria e notificações** — registro administrativo global, central de
+  alertas lidos/não lidos e integração com Telegram por severidade, com
+  credenciais cifradas e envio de teste pela interface.
 - **Registro de contêiner independente** — todas as imagens nativas e o
   atualizador passam a ser construídos no GitHub Actions e publicados no GHCR
   do Ebyte com tags de versão, commit, SBOM e atestação de procedência.

@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- Added root-only global auditing, an in-panel notification inbox, encrypted
+  Telegram settings and severity-based Telegram delivery with a built-in test.
 - Added independent GHCR publishing for every native runtime and the updater,
   including version/commit tags, SBOMs, and provenance attestations.
 - Added a root-only visual editor for news, social links, resources, and

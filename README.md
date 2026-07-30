@@ -100,6 +100,7 @@ Recursos.
 - [Telemetria](docs/TELEMETRY.pt-BR.md)
 - [Personalização de marca](docs/BRANDING.pt-BR.md)
 - [Imagens de contêiner próprias](docs/CONTAINER_IMAGES.pt-BR.md)
+- [Auditoria, notificações e Telegram](docs/AUDIT_NOTIFICATIONS.pt-BR.md)
 - [Changelog em português](CHANGELOG.pt-BR.md)
 
 ## 📄 Licença
