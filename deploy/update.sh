@@ -166,7 +166,7 @@ main() {
   run_deploy_migrations
 
   log "Pulling updater image..."
-  pull_updater_image_best_effort "ovhcom/gamepanel-updater:$(read_app_version "$APP_SOURCE_DIR")"
+  pull_updater_image_best_effort "ghcr.io/elvisfalmeida/ebyte-game-panel-updater:$(read_app_version "$APP_SOURCE_DIR")"
 
   log "Rebuilding and starting updated GamePanel stack..."
   compose_cmd up -d --build --remove-orphans

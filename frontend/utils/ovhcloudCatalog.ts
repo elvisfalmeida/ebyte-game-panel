@@ -17,11 +17,11 @@ export interface OvhcloudImage {
   supportsHytaleOptions: boolean;
 }
 
-const REGISTRY = 'ovhcom';
+const REGISTRY = 'ghcr.io/elvisfalmeida';
 const VERSION = getAppVersion().replace(/^v/, '');
 
 function ovhImage(name: string): string {
-  return `${REGISTRY}/${name}:${VERSION}`;
+  return `${REGISTRY}/${name.replace(/^gamepanel-/, 'ebyte-game-panel-')}:${VERSION}`;
 }
 
 const MINECRAFT_COMMON_ENV: Record<string, string> = {

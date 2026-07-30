@@ -1,0 +1,192 @@
+name: Publicar imagens de contêiner
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Versão a publicar, sem o prefixo v
+        required: true
+        default: "1.2.0"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: container-images-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: palworld
+            image: ebyte-game-panel-palworld
+            context: docker-images/palworld
+            dockerfile: docker-images/palworld/Dockerfile
+          - name: counter-strike-2
+            image: ebyte-game-panel-counter-strike-2
+            context: docker-images/counter-strike/2
+            dockerfile: docker-images/counter-strike/2/Dockerfile
+          - name: project-zomboid
+            image: ebyte-game-panel-project-zomboid
+            context: docker-images/project-zomboid
+            dockerfile: docker-images/project-zomboid/Dockerfile
+          - name: hytale-java25
+            image: ebyte-game-panel-hytale-java25
+            context: docker-images/hytale
+            dockerfile: docker-images/hytale/Dockerfile
+          - name: minecraft-bedrock-edition
+            image: ebyte-game-panel-minecraft-bedrock-edition
+            context: docker-images/minecraft/bedrock-edition
+            dockerfile: docker-images/minecraft/bedrock-edition/Dockerfile
+          - name: minecraft-java17
+            image: ebyte-game-panel-minecraft-java-edition-java17
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/vanilla/Dockerfile
+            build_args: JAVA_VERSION=17
+          - name: minecraft-java21
+            image: ebyte-game-panel-minecraft-java-edition-java21
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/vanilla/Dockerfile
+            build_args: JAVA_VERSION=21
+          - name: minecraft-java25
+            image: ebyte-game-panel-minecraft-java-edition-java25
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/vanilla/Dockerfile
+            build_args: JAVA_VERSION=25
+          - name: minecraft-java8
+            image: ebyte-game-panel-minecraft-java-edition-java8
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/vanilla/Dockerfile
+            build_args: JAVA_VERSION=8
+          - name: minecraft-paper-java17
+            image: ebyte-game-panel-minecraft-paper-java17
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/paper/Dockerfile
+            build_args: JAVA_VERSION=17
+          - name: minecraft-paper-java21
+            image: ebyte-game-panel-minecraft-paper-java21
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/paper/Dockerfile
+            build_args: JAVA_VERSION=21
+          - name: minecraft-paper-java25
+            image: ebyte-game-panel-minecraft-paper-java25
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/paper/Dockerfile
+            build_args: JAVA_VERSION=25
+          - name: minecraft-paper-java8
+            image: ebyte-game-panel-minecraft-paper-java8
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/paper/Dockerfile
+            build_args: JAVA_VERSION=8
+          - name: minecraft-fabric-java17
+            image: ebyte-game-panel-minecraft-fabric-java17
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/fabric/Dockerfile
+            build_args: JAVA_VERSION=17
+          - name: minecraft-fabric-java21
+            image: ebyte-game-panel-minecraft-fabric-java21
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/fabric/Dockerfile
+            build_args: JAVA_VERSION=21
+          - name: minecraft-fabric-java25
+            image: ebyte-game-panel-minecraft-fabric-java25
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/fabric/Dockerfile
+            build_args: JAVA_VERSION=25
+          - name: minecraft-fabric-java8
+            image: ebyte-game-panel-minecraft-fabric-java8
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/fabric/Dockerfile
+            build_args: JAVA_VERSION=8
+          - name: minecraft-neoforge-java21
+            image: ebyte-game-panel-minecraft-neoforge-java21
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/neoforge/Dockerfile
+            build_args: JAVA_VERSION=21
+          - name: minecraft-neoforge-java17
+            image: ebyte-game-panel-minecraft-neoforge-java17
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/neoforge/Dockerfile
+            build_args: JAVA_VERSION=17
+          - name: minecraft-neoforge-java8
+            image: ebyte-game-panel-minecraft-neoforge-java8
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/neoforge/Dockerfile
+            build_args: JAVA_VERSION=8
+          - name: minecraft-neoforge-java25
+            image: ebyte-game-panel-minecraft-neoforge-java25
+            context: docker-images/minecraft/java-edition
+            dockerfile: docker-images/minecraft/java-edition/neoforge/Dockerfile
+            build_args: JAVA_VERSION=25
+          - name: updater
+            image: ebyte-game-panel-updater
+            context: .
+            dockerfile: docker-images/gamepanel/updater/Dockerfile
+
+    steps:
+      - name: Obter código-fonte
+        uses: actions/checkout@v4
+
+      - name: Preparar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Autenticar no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Definir metadados
+        id: meta
+        shell: bash
+        env:
+          MANUAL_VERSION: ${{ inputs.version }}
+          IMAGE_NAME: ${{ matrix.image }}
+        run: |
+          version="${MANUAL_VERSION:-${GITHUB_REF_NAME#v}}"
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${IMAGE_NAME}"
+          {
+            echo "version=${version}"
+            echo "image=${image}"
+            echo "tags<<EOF"
+            echo "${image}:${version}"
+            echo "${image}:latest"
+            echo "${image}:sha-${GITHUB_SHA::12}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Construir e publicar
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            ${{ matrix.build_args }}
+            IMAGE_CREATED=${{ github.event.repository.updated_at }}
+            IMAGE_REVISION=${{ github.sha }}
+            IMAGE_VERSION=${{ steps.meta.outputs.version }}
+            IMAGE_SOURCE=${{ github.server_url }}/${{ github.repository }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ steps.meta.outputs.version }}
+            org.opencontainers.image.vendor=Ebyte
+            org.opencontainers.image.licenses=Apache-2.0
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+          provenance: mode=max
+          sbom: true

@@ -4,6 +4,8 @@
 
 ## Unreleased
 
+- Added independent GHCR publishing for every native runtime and the updater,
+  including version/commit tags, SBOMs, and provenance attestations.
 - Added a root-only visual editor for news, social links, resources, and
   tutorials, with backend validation, bind-mount-safe writes, and immediate refresh.
 - Established Ebyte Game Panel as an independent product repository, with
