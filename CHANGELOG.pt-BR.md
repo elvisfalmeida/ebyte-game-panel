@@ -14,6 +14,10 @@
   Terminal, Backups, Gerenciador de arquivos e Configuração do contêiner agora
   usam chaves nativas em ações, estados vazios, avisos, validações, status e
   rótulos dinâmicos.
+- **Tradução da administração e do catálogo** — Limpeza do servidor,
+  Administração de usuários (incluindo a matriz de permissões) e Recursos agora
+  usam chaves nativas em ações, validações, confirmações, filtros e estados
+  vazios.
 - Interface multilíngue com detecção do navegador, seletor persistente, inglês
   como fallback e português do Brasil.
 - Traduções do login, navegação principal, modal de configurações e tela de

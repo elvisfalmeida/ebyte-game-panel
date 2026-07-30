@@ -2,10 +2,12 @@ import { BookOpen, Video, FileText, ExternalLink, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { apiClient, type CatalogResourceItem } from '../utils/api';
 import { AppButton, AppCard, AppInput, AppSelect } from '../src/ui/components';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const MAX_VISIBLE_RESOURCES = 9;
 
 export function Resources() {
+  const { t } = useLanguage();
   const [resources, setResources] = useState<CatalogResourceItem[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -35,7 +37,7 @@ export function Resources() {
         console.error('Failed to load resources:', error);
         if (!cancelled) {
           setResources([]);
-          setLoadError('Unable to load resources right now.');
+          setLoadError(t('resources.loadError', 'Unable to load resources right now.'));
         }
       } finally {
         if (!cancelled) {
@@ -113,10 +115,10 @@ export function Resources() {
     >
       <div className={`p-8 pb-6 border-b border-gray-800`}>
         <h1 className={`text-2xl md:text-3xl font-bold mb-3 ${textPrimary}`}>
-          Resources & Tutorials
+          {t('resources.title', 'Resources & Tutorials')}
         </h1>
         <p className={`text-lg ${textTertiary}`}>
-          Learn how to manage your game servers effectively
+          {t('resources.description', 'Learn how to manage your game servers effectively')}
         </p>
       </div>
 
@@ -124,7 +126,7 @@ export function Resources() {
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <label className={`${textPrimary} text-sm font-medium block mb-2`}>
-              Search Resources
+              {t('resources.search', 'Search Resources')}
             </label>
             <div className="relative">
               <Search
@@ -134,7 +136,7 @@ export function Resources() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by title, description, or game key..."
+                placeholder={t('resources.searchPlaceholder', 'Search by title, description, or game key...')}
                 className={`h-12 w-full ${inputBg} border ${inputBorder} rounded-lg pl-12 pr-4 ${textPrimary} focus:outline-none focus:border-[var(--gp-ods-accent-primary)] focus:ring-2 focus:ring-[var(--gp-ods-accent-primary)]/30 placeholder-gray-500 transition-all`}
               />
             </div>
@@ -142,12 +144,15 @@ export function Resources() {
 
           <div>
             <label className={`${textPrimary} text-sm font-medium block mb-2`}>
-              Filter by Category
+              {t('resources.filter', 'Filter by Category')}
             </label>
             <AppSelect
               value={selectedCategory}
               onChange={(value) => setSelectedCategory(value)}
-              options={categories.map((category) => ({ label: category, value: category }))}
+              options={categories.map((category) => ({
+                label: category === 'All' ? t('resources.all', 'All') : category,
+                value: category,
+              }))}
               className={`gp-resources-select w-full ${textPrimary} transition-all cursor-pointer`}
             />
           </div>
@@ -156,15 +161,16 @@ export function Resources() {
 
       <div className="px-8 pb-4">
         <p className={`${textTertiary} text-sm font-medium`}>
-          Showing {filteredResources.length}{' '}
-          {filteredResources.length === 1 ? 'resource' : 'resources'}
+          {filteredResources.length === 1
+            ? t('resources.showingOne', 'Showing 1 resource')
+            : t('resources.showingMany', `Showing ${filteredResources.length} resources`, { count: filteredResources.length })}
         </p>
       </div>
 
       {isLoading && (
         <div className="px-8 pb-8">
           <div className="bg-[#1a2332] rounded-xl p-12 text-center">
-            <p className={`${textTertiary} text-base`}>Loading resources...</p>
+            <p className={`${textTertiary} text-base`}>{t('resources.loading', 'Loading resources...')}</p>
           </div>
         </div>
       )}
@@ -173,7 +179,7 @@ export function Resources() {
         <div className="px-8 pb-8">
           <div className="bg-[#1a2332] rounded-xl p-12 text-center">
             <h3 className={`text-xl font-semibold mb-3 ${textPrimary}`}>
-              Unable to load resources
+              {t('resources.loadErrorTitle', 'Unable to load resources')}
             </h3>
             <p className={`${textTertiary} text-base`}>{loadError}</p>
           </div>
@@ -238,8 +244,10 @@ export function Resources() {
                 className="px-8 py-4 bg-[var(--gp-ods-accent-primary)] !text-white transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 {showAll
-                  ? 'Show Less'
-                  : `See More Resources (${filteredResources.length - MAX_VISIBLE_RESOURCES} more)`}
+                  ? t('resources.showLess', 'Show Less')
+                  : t('resources.showMore', `See More Resources (${filteredResources.length - MAX_VISIBLE_RESOURCES} more)`, {
+                      count: filteredResources.length - MAX_VISIBLE_RESOURCES,
+                    })}
               </AppButton>
             </div>
           )}
@@ -250,9 +258,9 @@ export function Resources() {
                 <div className="bg-gray-800 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <BookOpen className={`w-10 h-10 ${textTertiary}`} />
                 </div>
-                <h3 className={`text-2xl font-semibold mb-3 ${textPrimary}`}>No resources found</h3>
+                <h3 className={`text-2xl font-semibold mb-3 ${textPrimary}`}>{t('resources.none', 'No resources found')}</h3>
                 <p className={`${textTertiary} text-base`}>
-                  Try adjusting your search or filter criteria
+                  {t('resources.noneHint', 'Try adjusting your search or filter criteria')}
                 </p>
               </div>
             </div>

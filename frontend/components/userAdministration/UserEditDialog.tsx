@@ -28,6 +28,7 @@ import {
   toggleServerPermission,
 } from './utils';
 import { getSupportedWipeModes } from '../serverSettings/wipeModes';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface SelectedUserRef {
   id: number;
@@ -96,6 +97,17 @@ export function UserEditDialog({
   saveLoading,
   saveError,
 }: UserEditDialogProps) {
+  const { t } = useLanguage();
+  const permissionLabel = (value: string, fallback: string) => t(`permission.${value}`, fallback);
+  const presetLabel = (id: string, fallback: string) => t(`preset.${id}`, fallback);
+  const accessLabel = (permissions: string[]) => {
+    const label = getAccessLevelLabel(permissions);
+    if (label === 'No access') return t('users.noAccess', label);
+    if (label === 'Full access') return t('preset.full', label);
+    if (label === 'Viewer') return t('preset.viewer', label);
+    if (label === 'Operator') return t('preset.operator', label);
+    return t('users.custom', label);
+  };
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
@@ -135,45 +147,45 @@ export function UserEditDialog({
             type="button"
             onClick={() => onOpenChange(false)}
             className="rounded p-1.5 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors"
-            aria-label="Close"
+            aria-label={t('users.close', 'Close')}
           >
             <X className="h-5 w-5" />
           </button>
         </div>
         <div className="max-h-[calc(90vh-44px)] overflow-y-auto hide-scrollbar modal-scrollbar-dark p-4 md:p-5">
 
-          {!selectedUser && <p className="pt-0 text-sm text-gray-400">No user selected.</p>}
+          {!selectedUser && <p className="pt-0 text-sm text-gray-400">{t('users.noSelection', 'No user selected.')}</p>}
           {selectedUser &&
             (selectedUser.isRoot ? (
               <div className="pt-0">
                 <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
-                  Super Admin account cannot be edited or deleted here.
+                  {t('users.rootLocked', 'Super Admin account cannot be edited or deleted here.')}
                 </div>
               </div>
             ) : (
               <div className="space-y-5 pt-0">
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-[2fr_1fr]">
                   <section className="rounded-lg border border-gray-700 bg-[#1f2937] p-4">
-                    <h3 className="text-lg font-semibold text-white">User configuration</h3>
+                    <h3 className="text-lg font-semibold text-white">{t('users.configuration', 'User configuration')}</h3>
                     <div className="mt-3 space-y-4">
                       <div className="inline-flex items-center gap-3 rounded-lg border border-gray-700 bg-[#111827] px-3 py-2 text-sm text-gray-200">
                         <AppToggle
-                          ariaLabel="Account enabled"
+                          ariaLabel={t('users.enabled', 'Account enabled')}
                           checked={enabled}
                           size="compact"
                           onChange={setEnabled}
                         />
-                        <span>Account enabled</span>
+                        <span>{t('users.enabled', 'Account enabled')}</span>
                       </div>
 
                       <label className="block">
-                        <span className="mb-1.5 block text-sm font-medium text-gray-200">User name</span>
+                        <span className="mb-1.5 block text-sm font-medium text-gray-200">{t('users.username', 'User name')}</span>
                         <AppInput
                           name="edit-user-username"
                           autoComplete="off"
                           value={username}
                           onChange={(event) => setUsername(event.target.value)}
-                          placeholder="Username"
+                          placeholder={t('users.username', 'Username')}
                           className="prevent-autofill w-full rounded border border-gray-700 bg-[#0f172a] px-3 py-2 text-sm text-white"
                         />
                       </label>
@@ -181,7 +193,7 @@ export function UserEditDialog({
                       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <label className="block">
                           <span className="mb-1.5 block text-sm font-medium text-gray-200">
-                            New password
+                            {t('users.newPassword', 'New password')}
                           </span>
                           <div className="relative">
                             <AppInput
@@ -192,7 +204,7 @@ export function UserEditDialog({
                               data-1p-ignore="true"
                               value={newPassword}
                               onChange={(event) => setNewPassword(event.target.value)}
-                              placeholder="New password"
+                              placeholder={t('users.newPassword', 'New password')}
                               className="prevent-autofill w-full rounded border border-gray-700 bg-[#0f172a] px-3 py-2 pr-10 text-sm text-white"
                             />
                             <button type="button" tabIndex={-1} onClick={() => setShowPassword(s => !s)}
@@ -203,7 +215,7 @@ export function UserEditDialog({
                         </label>
                         <label className="block">
                           <span className="mb-1.5 block text-sm font-medium text-gray-200">
-                            Retype new password
+                            {t('users.retypePassword', 'Retype new password')}
                           </span>
                           <div className="relative">
                             <AppInput
@@ -214,7 +226,7 @@ export function UserEditDialog({
                               data-1p-ignore="true"
                               value={newPasswordConfirm}
                               onChange={(event) => setNewPasswordConfirm(event.target.value)}
-                              placeholder="Retype password"
+                              placeholder={t('users.retypePassword', 'Retype password')}
                               className="prevent-autofill w-full rounded border border-gray-700 bg-[#0f172a] px-3 py-2 pr-10 text-sm text-white"
                             />
                             <button type="button" tabIndex={-1} onClick={() => setShowPasswordConfirm(s => !s)}
@@ -228,7 +240,7 @@ export function UserEditDialog({
                   </section>
 
                   <section className="rounded-lg border border-gray-700 bg-[#1f2937] p-4">
-                    <h3 className="text-lg font-semibold text-white">Global Permissions</h3>
+                    <h3 className="text-lg font-semibold text-white">{t('users.globalPermissions', 'Global Permissions')}</h3>
                     <div className="mt-3 space-y-2">
                       {GLOBAL_OPTIONS.filter((opt) => opt.value !== '*').map((opt) => {
                         const checked = globalKnown.includes(opt.value);
@@ -236,13 +248,13 @@ export function UserEditDialog({
                         return (
                           <AppToggle
                             key={`global-${opt.value}`}
-                            ariaLabel={opt.label}
+                            ariaLabel={permissionLabel(opt.value, opt.label)}
                             checked={checked}
                             size="compact"
                             onChange={() =>
                               setGlobalKnown((current) => togglePermission(current, opt.value))
                             }
-                            label={opt.label}
+                            label={permissionLabel(opt.value, opt.label)}
                             className={`w-full flex-row-reverse justify-between rounded border px-3 py-2 transition-colors ${
                               checked
                                 ? 'border-[var(--color-cyan-400)]/50 bg-[#0050D7]/10'
@@ -256,9 +268,9 @@ export function UserEditDialog({
                 </div>
 
                 <section className="rounded-lg border border-gray-700 bg-[#1f2937] p-4">
-                  <h3 className="text-lg font-semibold text-white">Server access for this user</h3>
+                  <h3 className="text-lg font-semibold text-white">{t('users.serverAccess', 'Server access for this user')}</h3>
                   <p className="mt-1 text-sm text-gray-400">
-                    Configure one server at a time with clear access status and actions
+                    {t('users.serverAccessDescription', 'Configure one server at a time with clear access status and actions')}
                   </p>
 
                   {membersError && (
@@ -270,7 +282,7 @@ export function UserEditDialog({
                   <div className="mt-4 space-y-4">
                     <div>
                       <label className="mb-1.5 block text-sm font-medium text-gray-200">
-                        Select server
+                        {t('users.selectServer', 'Select server')}
                       </label>
                       <AppSelect
                         value={selectedServerId}
@@ -285,7 +297,7 @@ export function UserEditDialog({
 
                     <div className="rounded-lg border border-gray-700/70 bg-[#111827] px-3 py-2">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs text-gray-400">Current access</span>
+                        <span className="text-xs text-gray-400">{t('users.currentAccess', 'Current access')}</span>
                         <span
                           className={`rounded-full border px-2 py-0.5 text-xs ${
                             selectedAccessUser
@@ -294,17 +306,17 @@ export function UserEditDialog({
                           }`}
                         >
                           {selectedAccessUser
-                            ? getAccessLevelLabel(selectedAccessUser.permissions)
-                            : 'No access'}
+                            ? accessLabel(selectedAccessUser.permissions)
+                            : t('users.noAccess', 'No access')}
                         </span>
                       </div>
                     </div>
 
                     <div>
                       <p className="text-sm font-medium text-gray-200">
-                        Set permissions for <span className="text-white">{selectedServerName}</span>
+                        {t('users.setPermissions', 'Set permissions for {server}', { server: selectedServerName })}
                       </p>
-                      <p className="mt-2 text-sm font-medium text-gray-200">Quick presets</p>
+                      <p className="mt-2 text-sm font-medium text-gray-200">{t('users.quickPresets', 'Quick presets')}</p>
                       {(() => {
                         const ADDON_PERMS = ['minecraft.addons.read', 'minecraft.addons.write'];
                         const filterAddons = (perms: string[]) =>
@@ -344,7 +356,7 @@ export function UserEditDialog({
                               onClick={() => setAddMemberKnown([])}
                               className={`${chipBase} ${noAccessActive ? activeChip : idleChip}`}
                             >
-                              No access
+                              {t('users.noAccess', 'No access')}
                             </AppButton>
                             {presetChips.map((preset) => {
                               const active = samePermissionSet(addMemberPerms, preset.permissions);
@@ -355,7 +367,7 @@ export function UserEditDialog({
                                   onClick={() => applyAddPreset(preset.id)}
                                   className={`${chipBase} ${active ? activeChip : idleChip}`}
                                 >
-                                  {preset.label}
+                                  {presetLabel(preset.id, preset.label)}
                                 </AppButton>
                               );
                             })}
@@ -368,7 +380,7 @@ export function UserEditDialog({
                                 customActive ? activeChip : `${idleChip} opacity-60`
                               }`}
                             >
-                              Custom
+                              {t('users.custom', 'Custom')}
                             </AppButton>
                           </div>
                         );
@@ -377,9 +389,9 @@ export function UserEditDialog({
 
                     {/* General permissions */}
                     {[
-                      { label: 'General', options: SERVER_GENERAL_OPTIONS },
-                      { label: 'File Manager', options: FILE_MANAGER_OPTIONS },
-                      { label: 'Scheduled Tasks', options: SCHEDULED_TASKS_OPTIONS },
+                      { label: t('users.general', 'General'), options: SERVER_GENERAL_OPTIONS },
+                      { label: t('users.fileManager', 'File Manager'), options: FILE_MANAGER_OPTIONS },
+                      { label: t('users.scheduledTasks', 'Scheduled Tasks'), options: SCHEDULED_TASKS_OPTIONS },
                     ].map(({ label, options }) => (
                       <div key={label}>
                         <span className="mb-2 block text-xs font-medium text-gray-400">{label}</span>
@@ -389,7 +401,7 @@ export function UserEditDialog({
                             return (
                               <AppToggle
                                 key={`server-opt-${opt.value}`}
-                                ariaLabel={opt.label}
+                                ariaLabel={permissionLabel(opt.value, opt.label)}
                                 checked={checked}
                                 size="compact"
                                 onChange={() =>
@@ -397,7 +409,7 @@ export function UserEditDialog({
                                     toggleServerPermission(current, opt.value)
                                   )
                                 }
-                                label={opt.label}
+                                label={permissionLabel(opt.value, opt.label)}
                                 className={`w-full flex-row-reverse justify-between rounded border px-3 py-2 transition-colors ${
                                   checked
                                     ? 'border-[var(--color-cyan-400)]/50 bg-[#0050D7]/10'
@@ -413,14 +425,14 @@ export function UserEditDialog({
                     {/* Backups — hidden for external images and CS2 */}
                     {!isExternalServer && !isCs2OvhcloudServer && (
                       <div>
-                        <span className="mb-2 block text-xs font-medium text-gray-400">Backups</span>
+                        <span className="mb-2 block text-xs font-medium text-gray-400">{t('settings.backups', 'Backups')}</span>
                         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
                           {BACKUP_OPTIONS.map((opt) => {
                             const checked = isServerPermissionChecked(addMemberKnown, opt.value);
                             return (
                               <AppToggle
                                 key={`server-opt-${opt.value}`}
-                                ariaLabel={opt.label}
+                                ariaLabel={permissionLabel(opt.value, opt.label)}
                                 checked={checked}
                                 size="compact"
                                 onChange={() =>
@@ -428,7 +440,7 @@ export function UserEditDialog({
                                     toggleServerPermission(current, opt.value)
                                   )
                                 }
-                                label={opt.label}
+                                label={permissionLabel(opt.value, opt.label)}
                                 className={`w-full flex-row-reverse justify-between rounded border px-3 py-2 transition-colors ${
                                   checked
                                     ? 'border-[var(--color-cyan-400)]/50 bg-[#0050D7]/10'
@@ -444,14 +456,14 @@ export function UserEditDialog({
                     {/* Wipe — OVHcloud games that support it; only the supported modes */}
                     {!isExternalServer && wipeOptions.length > 0 && (
                       <div>
-                        <span className="mb-2 block text-xs font-medium text-gray-400">Wipe</span>
+                        <span className="mb-2 block text-xs font-medium text-gray-400">{t('wipe.title', 'Wipe')}</span>
                         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
                           {wipeOptions.map((opt) => {
                             const checked = isServerPermissionChecked(addMemberKnown, opt.value);
                             return (
                               <AppToggle
                                 key={`server-opt-${opt.value}`}
-                                ariaLabel={opt.label}
+                                ariaLabel={permissionLabel(opt.value, opt.label)}
                                 checked={checked}
                                 size="compact"
                                 onChange={() =>
@@ -459,7 +471,7 @@ export function UserEditDialog({
                                     toggleServerPermission(current, opt.value)
                                   )
                                 }
-                                label={opt.label}
+                                label={permissionLabel(opt.value, opt.label)}
                                 className={`w-full flex-row-reverse justify-between rounded border px-3 py-2 transition-colors ${
                                   checked
                                     ? 'border-[var(--color-cyan-400)]/50 bg-[#0050D7]/10'
@@ -484,7 +496,7 @@ export function UserEditDialog({
                             return (
                               <AppToggle
                                 key={`server-opt-${opt.value}`}
-                                ariaLabel={opt.label}
+                                ariaLabel={permissionLabel(opt.value, opt.label)}
                                 checked={checked}
                                 size="compact"
                                 onChange={() =>
@@ -492,7 +504,7 @@ export function UserEditDialog({
                                     toggleServerPermission(current, opt.value)
                                   )
                                 }
-                                label={opt.label}
+                                label={permissionLabel(opt.value, opt.label)}
                                 className={`w-full flex-row-reverse justify-between rounded border px-3 py-2 transition-colors ${
                                   checked
                                     ? 'border-[var(--color-cyan-400)]/50 bg-[#0050D7]/10'
@@ -515,7 +527,7 @@ export function UserEditDialog({
                             return (
                               <AppToggle
                                 key={`server-opt-${opt.value}`}
-                                ariaLabel={opt.label}
+                                ariaLabel={permissionLabel(opt.value, opt.label)}
                                 checked={checked}
                                 size="compact"
                                 onChange={() =>
@@ -523,7 +535,7 @@ export function UserEditDialog({
                                     toggleServerPermission(current, opt.value)
                                   )
                                 }
-                                label={opt.label}
+                                label={permissionLabel(opt.value, opt.label)}
                                 className={`w-full flex-row-reverse justify-between rounded border px-3 py-2 transition-colors ${
                                   checked
                                     ? 'border-[var(--color-cyan-400)]/50 bg-[#0050D7]/10'
@@ -546,7 +558,7 @@ export function UserEditDialog({
                             return (
                               <AppToggle
                                 key={`server-opt-${opt.value}`}
-                                ariaLabel={opt.label}
+                                ariaLabel={permissionLabel(opt.value, opt.label)}
                                 checked={checked}
                                 size="compact"
                                 onChange={() =>
@@ -554,7 +566,7 @@ export function UserEditDialog({
                                     toggleServerPermission(current, opt.value)
                                   )
                                 }
-                                label={opt.label}
+                                label={permissionLabel(opt.value, opt.label)}
                                 className={`w-full flex-row-reverse justify-between rounded border px-3 py-2 transition-colors ${
                                   checked
                                     ? 'border-[var(--color-cyan-400)]/50 bg-[#0050D7]/10'
@@ -577,7 +589,7 @@ export function UserEditDialog({
                             return (
                               <AppToggle
                                 key={`server-opt-${opt.value}`}
-                                ariaLabel={opt.label}
+                                ariaLabel={permissionLabel(opt.value, opt.label)}
                                 checked={checked}
                                 size="compact"
                                 onChange={() =>
@@ -585,7 +597,7 @@ export function UserEditDialog({
                                     toggleServerPermission(current, opt.value)
                                   )
                                 }
-                                label={opt.label}
+                                label={permissionLabel(opt.value, opt.label)}
                                 className={`w-full flex-row-reverse justify-between rounded border px-3 py-2 transition-colors ${
                                   checked
                                     ? 'border-[var(--color-cyan-400)]/50 bg-[#0050D7]/10'
@@ -608,7 +620,7 @@ export function UserEditDialog({
                             return (
                               <AppToggle
                                 key={`server-opt-${opt.value}`}
-                                ariaLabel={opt.label}
+                                ariaLabel={permissionLabel(opt.value, opt.label)}
                                 checked={checked}
                                 size="compact"
                                 onChange={() =>
@@ -616,7 +628,7 @@ export function UserEditDialog({
                                     toggleServerPermission(current, opt.value)
                                   )
                                 }
-                                label={opt.label}
+                                label={permissionLabel(opt.value, opt.label)}
                                 className={`w-full flex-row-reverse justify-between rounded border px-3 py-2 transition-colors ${
                                   checked
                                     ? 'border-[var(--color-cyan-400)]/50 bg-[#0050D7]/10'
@@ -645,7 +657,7 @@ export function UserEditDialog({
                     disabled={isBusy}
                     className="rounded bg-gray-700 px-4 py-2 text-sm text-white hover:bg-gray-600 disabled:opacity-60"
                   >
-                    Cancel
+                    {t('common.cancel', 'Cancel')}
                   </AppButton>
                   <AppButton
                     type="button"
@@ -655,7 +667,7 @@ export function UserEditDialog({
                     className="inline-flex items-center gap-2 rounded px-4 py-2 text-sm font-medium disabled:opacity-60"
                   >
                     <Save className="h-4 w-4" />
-                    {saveLoading ? 'Saving...' : 'Save changes'}
+                    {saveLoading ? t('common.saving', 'Saving...') : t('users.saveChanges', 'Save changes')}
                   </AppButton>
                   </div>
                 </div>

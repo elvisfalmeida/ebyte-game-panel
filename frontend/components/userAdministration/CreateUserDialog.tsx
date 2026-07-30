@@ -3,6 +3,7 @@ import { AlertCircle, Eye, EyeOff, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '../ui/dialog';
 import { MAX_USERS } from './utils';
 import { AppButton, AppInput } from '../../src/ui/components';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface CreateUserDialogProps {
   open: boolean;
@@ -34,6 +35,7 @@ export function CreateUserDialog({
   onCreateUser,
   error,
 }: CreateUserDialogProps) {
+  const { t } = useLanguage();
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
 
@@ -42,16 +44,16 @@ export function CreateUserDialog({
       <DialogContent className="w-[94vw] sm:w-full max-h-[90vh] sm:max-w-[420px] overflow-hidden border border-gray-700/80 bg-[#0f172a] p-0 text-white">
         <div className="max-h-[90vh] overflow-y-auto hide-scrollbar modal-scrollbar-dark p-6 md:p-7">
           <DialogHeader className="border-b border-gray-800 pb-5 pr-8">
-            <DialogTitle className="text-xl text-white">Create user</DialogTitle>
+            <DialogTitle className="text-xl text-white">{t('users.create', 'Create user')}</DialogTitle>
             <DialogDescription className="leading-relaxed text-gray-400">
-              Create the account directly from the panel. The user is enabled immediately.
+              {t('users.createDescription', 'Create the account directly from the panel. The user is enabled immediately.')}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5 pt-6">
             {userLimitReached && (
               <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
-                Limit reached: maximum {MAX_USERS} users.
+                {t('users.limitDescription', `Limit reached: maximum ${MAX_USERS} users.`, { count: MAX_USERS })}
               </div>
             )}
 
@@ -59,7 +61,7 @@ export function CreateUserDialog({
               <AppInput
                 value={createUsername}
                 onChange={(event) => setCreateUsername(event.target.value)}
-                placeholder="Username"
+                placeholder={t('users.username', 'Username')}
                 name="new-user-username"
                 autoComplete="off"
                 className="prevent-autofill w-full rounded border border-gray-700 bg-[#1f2937] px-3 py-2 text-sm text-white focus:border-[var(--color-cyan-400)] focus:outline-none"
@@ -68,7 +70,7 @@ export function CreateUserDialog({
                 <AppInput
                   value={createPassword}
                   onChange={(event) => setCreatePassword(event.target.value)}
-                  placeholder="Password"
+                  placeholder={t('users.password', 'Password')}
                   name="new-user-password"
                   type={showPassword ? 'text' : 'password'}
                   autoComplete="new-password"
@@ -85,7 +87,7 @@ export function CreateUserDialog({
                 <AppInput
                   value={createPasswordConfirm}
                   onChange={(event) => setCreatePasswordConfirm(event.target.value)}
-                  placeholder="Confirm password"
+                  placeholder={t('users.confirmPassword', 'Confirm password')}
                   name="new-user-password-confirm"
                   type={showPasswordConfirm ? 'text' : 'password'}
                   autoComplete="new-password"
@@ -114,7 +116,7 @@ export function CreateUserDialog({
                 disabled={createLoading}
                 className="flex-1 rounded bg-gray-700 px-4 py-2 text-sm text-white hover:bg-gray-600 disabled:opacity-60"
               >
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </AppButton>
               <AppButton
                 type="button"
@@ -124,7 +126,7 @@ export function CreateUserDialog({
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded px-4 py-2 text-sm font-medium disabled:opacity-60"
               >
                 <Plus className="h-4 w-4" />
-                {createLoading ? 'Creating...' : 'Create user'}
+                {createLoading ? t('users.creating', 'Creating...') : t('users.create', 'Create user')}
               </AppButton>
             </div>
           </div>

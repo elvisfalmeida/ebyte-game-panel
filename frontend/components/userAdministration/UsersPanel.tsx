@@ -1,6 +1,7 @@
 import { Plus, Settings2, Shield, Users } from 'lucide-react';
 import { Icon } from '@ovhcloud/ods-react';
 import { AppButton, AppCard } from '../../src/ui/components';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 interface PanelUserListItem {
   id: number;
@@ -35,17 +36,18 @@ export function UsersPanel({
   requestDeleteUser,
   deleteUserLoading,
 }: UsersPanelProps) {
+  const { t } = useLanguage();
   return (
     <AppCard className="p-5 md:p-6">
       <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="flex items-center gap-2 text-xl font-semibold text-white">
             <Users className="h-5 w-5 text-[var(--color-cyan-400)]" />
-            Users
+            {t('users.title', 'Users')}
           </h2>
           {userLimitReached && (
             <span className="rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs text-amber-300">
-              Max {maxUsers}
+              {t('users.max', `Max ${maxUsers}`, { count: maxUsers })}
             </span>
           )}
         </div>
@@ -55,7 +57,7 @@ export function UsersPanel({
               if (userLimitReached) {
                 setFeedback({
                   type: 'error',
-                  text: `User limit reached (${maxUsers} max).`,
+                  text: t('users.limit', `User limit reached (${maxUsers} max).`, { count: maxUsers }),
                 });
                 return;
               }
@@ -66,13 +68,13 @@ export function UsersPanel({
             className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[var(--color-cyan-400)]/55 bg-[#0b1728] px-4 text-sm font-semibold text-[var(--color-cyan-400)] transition-colors hover:border-[var(--color-cyan-400)] hover:text-[var(--color-cyan-400)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus className="h-4 w-4" />
-            Create user
+            {t('users.create', 'Create user')}
           </AppButton>
         </div>
       </div>
 
       <div className="space-y-3">
-        {users.length === 0 && !usersLoading && <p className="text-sm text-gray-400">No users found.</p>}
+        {users.length === 0 && !usersLoading && <p className="text-sm text-gray-400">{t('users.none', 'No users found.')}</p>}
 
         {users.map((u) => (
           <AppCard
@@ -92,12 +94,12 @@ export function UsersPanel({
                     {u.isRoot && (
                       <span className="inline-flex items-center gap-1 rounded border border-amber-500/60 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-300">
                         <Shield className="h-3.5 w-3.5" />
-                        Super Admin
+                        {t('users.superAdmin', 'Super Admin')}
                       </span>
                     )}
                   </div>
                   <p className="mt-1 truncate text-sm text-gray-400">
-                    {u.isEnabled ? 'Account enabled' : 'Account disabled'}
+                    {u.isEnabled ? t('users.enabled', 'Account enabled') : t('users.disabled', 'Account disabled')}
                   </p>
                 </div>
               </div>
@@ -109,14 +111,14 @@ export function UsersPanel({
                     className="inline-flex h-10 shrink-0 items-center gap-2 rounded-md border border-gray-600 bg-[#111827] px-3.5 text-sm text-gray-200 hover:border-[var(--color-cyan-400)] hover:text-[var(--color-cyan-400)]"
                   >
                     <Settings2 className="h-4 w-4" />
-                    Edit
+                    {t('users.edit', 'Edit')}
                   </AppButton>
                   <AppButton
                     type="button"
                     onClick={() => requestDeleteUser(u)}
                     disabled={deleteUserLoading}
-                    aria-label={`Delete user ${u.username}`}
-                    title={`Delete user ${u.username}`}
+                    aria-label={t('users.deleteAria', `Delete user ${u.username}`, { username: u.username })}
+                    title={t('users.deleteAria', `Delete user ${u.username}`, { username: u.username })}
                     className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-red-500/45 bg-[#2a1219] text-sm text-red-200 hover:border-red-400 hover:text-red-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Icon name="trash" />
@@ -130,6 +132,5 @@ export function UsersPanel({
     </AppCard>
   );
 }
-
 
 

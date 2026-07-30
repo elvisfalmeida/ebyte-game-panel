@@ -13,6 +13,10 @@
 - **Structured server-tool translations** — Scheduled Tasks, Terminal, Backups,
   File Manager, and Container Configuration now use native translation keys for
   actions, empty states, warnings, validation, status, and dynamic labels.
+- **Administration and catalog translations** — server wipe workflows, user
+  administration (including permission matrices), and Resources now resolve
+  actions, validation, confirmations, filters, and empty states through native
+  EN/PT-BR keys.
 - **Internationalization** — browser-language detection, a persistent language
   selector, English fallback, and Brazilian Portuguese for the login,
   navigation, server settings shell, and Palworld settings workflow.
