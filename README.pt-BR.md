@@ -78,6 +78,9 @@ alternar entre **English** e **Português (Brasil)** no seletor localizado na
 barra lateral. A escolha fica salva no navegador.
 
 Inglês é sempre usado como fallback quando uma tradução ainda não existe.
+As principais telas de gerenciamento do servidor usam chaves estruturadas de
+tradução. A camada de compatibilidade permanece apenas para trechos legados e
+conteúdo inserido dinamicamente.
 
 ## 🏗️ Arquitetura
 

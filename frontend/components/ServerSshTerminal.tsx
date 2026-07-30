@@ -6,6 +6,7 @@ import { FitAddon } from '@xterm/addon-fit';
 import '@xterm/xterm/css/xterm.css';
 import { apiClient } from '../utils/api';
 import { isServerUpLike } from '../utils/serverRuntime';
+import { useLanguage } from '../contexts/LanguageContext';
 
 const style = document.createElement('style');
 style.textContent = `
@@ -31,6 +32,7 @@ interface ServerSshTerminalProps {
 type TerminalStatus = 'idle' | 'creating' | 'connecting' | 'connected' | 'closed' | 'error';
 
 export function ServerSshTerminal({ serverId, serverStatus }: ServerSshTerminalProps) {
+  const { t } = useLanguage();
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [status, setStatus] = useState<TerminalStatus>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -168,7 +170,7 @@ export function ServerSshTerminal({ serverId, serverStatus }: ServerSshTerminalP
 
   const startSession = async () => {
     if (!serverId) {
-      setError('Missing server id for terminal session.');
+      setError(t('terminal.missingServer', 'Missing server id for terminal session.'));
       return;
     }
 
@@ -208,14 +210,14 @@ export function ServerSshTerminal({ serverId, serverStatus }: ServerSshTerminalP
           }
 
           if (message.type === 'terminal:error') {
-            setError(message.error || 'Terminal error');
+            setError(message.error || t('terminal.error', 'Terminal error'));
             setStatus('error');
           }
         } catch {}
       };
 
       ws.onerror = () => {
-        setError('WebSocket error while connecting terminal.');
+        setError(t('terminal.connectionError', 'WebSocket error while connecting terminal.'));
         setStatus('error');
       };
 
@@ -225,7 +227,7 @@ export function ServerSshTerminal({ serverId, serverStatus }: ServerSshTerminalP
 
       ws.send(JSON.stringify({ type: 'terminal:attach', sessionId }));
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.message || 'Failed to create terminal session.');
+      setError(err?.response?.data?.error || err?.message || t('terminal.sessionError', 'Failed to create terminal session.'));
       setStatus('error');
     }
   };
@@ -254,21 +256,21 @@ export function ServerSshTerminal({ serverId, serverStatus }: ServerSshTerminalP
       <div className="mb-4 flex flex-col gap-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h3 className="text-2xl font-bold text-white">Terminal</h3>
+            <h3 className="text-2xl font-bold text-white">{t('terminal.title', 'Terminal')}</h3>
           </div>
         </div>
       </div>
 
       {!serverId && (
         <div className="bg-gp-surface-elevated border border-gray-700 rounded-lg p-5 text-sm text-gray-300">
-          Terminal access is not available until this server is fully provisioned.
+          {t('terminal.unavailable', 'Terminal access is not available until this server is fully provisioned.')}
         </div>
       )}
 
       {serverId && !isServerUpLike(serverStatus) && (
         <div className="bg-gp-surface-elevated border border-amber-500/40 rounded-lg p-5 flex items-start gap-3">
           <AlertTriangle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
-          <p className="text-sm text-amber-200">The server must be <strong>running</strong> to open a terminal session.</p>
+          <p className="text-sm text-amber-200">{t('terminal.serverStopped', 'The server must be running to open a terminal session.')}</p>
         </div>
       )}
 
@@ -277,10 +279,9 @@ export function ServerSshTerminal({ serverId, serverStatus }: ServerSshTerminalP
           <div className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-yellow-400 mt-0.5" />
             <div className="flex-1">
-              <p className="text-sm text-yellow-200 font-semibold mb-2">Advanced feature warning</p>
+              <p className="text-sm text-yellow-200 font-semibold mb-2">{t('terminal.warningTitle', 'Advanced feature warning')}</p>
               <p className="text-sm text-gray-300">
-                This terminal gives full shell access inside the server container. Misuse can
-                break the game server, delete files, or expose sensitive data. Use with caution.
+                {t('terminal.warning', 'This terminal gives full shell access inside the server container. Misuse can break the game server, delete files, or expose sensitive data. Use with caution.')}
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <AppButton
@@ -288,7 +289,7 @@ export function ServerSshTerminal({ serverId, serverStatus }: ServerSshTerminalP
                   onClick={() => setDisclaimerAccepted(true)}
                   className="px-4 py-2 rounded text-sm font-semibold bg-yellow-500/90 text-gray-900 hover:bg-yellow-400 transition-colors"
                 >
-                  I understand, open terminal
+                  {t('terminal.accept', 'I understand, open terminal')}
                 </AppButton>
               </div>
             </div>
@@ -307,4 +308,3 @@ export function ServerSshTerminal({ serverId, serverStatus }: ServerSshTerminalP
     </div>
   );
 }
-

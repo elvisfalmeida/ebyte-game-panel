@@ -10,6 +10,7 @@ import { AppButton, AppToggle } from '../../src/ui/components';
 import { apiClient } from '../../utils/api';
 import { CronPicker } from './CronPicker';
 import { ConfirmationModal } from '../ConfirmationModal';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -61,18 +62,20 @@ const DEFAULT_FORM: TaskForm = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function describeCron(expr: string, nextRunAt?: string | null): string {
+type Translator = (key: string, fallback?: string, values?: Record<string, string | number>) => string;
+
+function describeCron(expr: string, t: Translator, nextRunAt?: string | null): string {
   const p = expr.trim().split(/\s+/);
   if (p.length !== 5) return expr;
   const [min, hour, dom, month, dow] = p;
   const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   if (min.startsWith('*/') && hour === '*' && dom === '*' && month === '*' && dow === '*') {
     const n = parseInt(min.slice(2));
-    return `Every ${n} minute${n !== 1 ? 's' : ''}`;
+    return t('tasks.everyMinutes', `Every ${n} minute${n !== 1 ? 's' : ''}`, { count: n });
   }
   if (hour.startsWith('*/') && dom === '*' && month === '*' && dow === '*') {
     const n = parseInt(hour.slice(2));
-    return `Every ${n} hour${n !== 1 ? 's' : ''}`;
+    return t('tasks.everyHours', `Every ${n} hour${n !== 1 ? 's' : ''}`, { count: n });
   }
   if (!/[*/,\-]/.test(min) && !/[*/,\-]/.test(hour) && dom === '*' && month === '*') {
     // Derive local time from nextRunAt so that UTC server times display correctly in the user's timezone.
@@ -85,13 +88,14 @@ function describeCron(expr: string, nextRunAt?: string | null): string {
         if (dow !== '*') dayLabel = DAYS[d.getDay()] ?? `day ${dow}`;
       }
     }
-    if (dayLabel === null) return `Every day at ${time}`;
-    return `Every ${dayLabel} at ${time}`;
+    if (dayLabel === null) return t('tasks.everyDayAt', `Every day at ${time}`, { time });
+    const translatedDay = t(`tasks.day.${nextRunAt ? new Date(nextRunAt).getDay() : parseInt(dow)}`, dayLabel);
+    return t('tasks.everyWeekdayAt', `Every ${dayLabel} at ${time}`, { day: translatedDay, time });
   }
   return expr;
 }
 
-function formatRelative(iso: string | null): string {
+function formatRelative(iso: string | null, t: Translator): string {
   if (!iso) return '—';
   const d = new Date(iso);
   const now = Date.now();
@@ -100,10 +104,16 @@ function formatRelative(iso: string | null): string {
   const mins = Math.round(abs / 60000);
   const hours = Math.round(abs / 3600000);
   const days = Math.round(abs / 86400000);
-  if (abs < 90000) return diff > 0 ? 'in <1 min' : '<1 min ago';
-  if (abs < 5400000) return diff > 0 ? `in ${mins} min` : `${mins} min ago`;
-  if (abs < 86400000 * 2) return diff > 0 ? `in ${hours} h` : `${hours} h ago`;
-  return diff > 0 ? `in ${days} d` : `${days} d ago`;
+  if (abs < 90000) return diff > 0 ? t('tasks.relative.futureMinute', 'in <1 min') : t('tasks.relative.pastMinute', '<1 min ago');
+  if (abs < 5400000) return diff > 0
+    ? t('tasks.relative.futureMinutes', `in ${mins} min`, { count: mins })
+    : t('tasks.relative.pastMinutes', `${mins} min ago`, { count: mins });
+  if (abs < 86400000 * 2) return diff > 0
+    ? t('tasks.relative.futureHours', `in ${hours} h`, { count: hours })
+    : t('tasks.relative.pastHours', `${hours} h ago`, { count: hours });
+  return diff > 0
+    ? t('tasks.relative.futureDays', `in ${days} d`, { count: days })
+    : t('tasks.relative.pastDays', `${days} d ago`, { count: days });
 }
 
 function taskFormToPayload(form: TaskForm, showPrePost: boolean, showIncludeServerArtifact: boolean): Record<string, unknown> {
@@ -136,12 +146,13 @@ function taskToForm(task: ScheduledTask): TaskForm {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string | null }) {
-  if (!status) return <span className="text-xs text-gray-400">Never run</span>;
+  const { t } = useLanguage();
+  if (!status) return <span className="text-xs text-gray-400">{t('tasks.neverRun', 'Never run')}</span>;
   const map: Record<string, { label: string; cls: string; icon: JSX.Element }> = {
-    success: { label: 'Success', cls: 'text-green-500', icon: <CheckCircle className="w-3.5 h-3.5" /> },
-    failed:  { label: 'Failed',  cls: 'text-red-500',   icon: <XCircle className="w-3.5 h-3.5" /> },
-    skipped: { label: 'Skipped', cls: 'text-yellow-500', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
-    running: { label: 'Running', cls: 'text-blue-500',  icon: <Loader2 className="w-3.5 h-3.5 animate-spin" /> },
+    success: { label: t('tasks.success', 'Success'), cls: 'text-green-500', icon: <CheckCircle className="w-3.5 h-3.5" /> },
+    failed:  { label: t('tasks.failed', 'Failed'), cls: 'text-red-500', icon: <XCircle className="w-3.5 h-3.5" /> },
+    skipped: { label: t('tasks.skipped', 'Skipped'), cls: 'text-yellow-500', icon: <AlertTriangle className="w-3.5 h-3.5" /> },
+    running: { label: t('tasks.running', 'Running'), cls: 'text-blue-500', icon: <Loader2 className="w-3.5 h-3.5 animate-spin" /> },
   };
   const s = map[status] ?? { label: status, cls: 'text-gray-400', icon: <Clock className="w-3.5 h-3.5" /> };
   return (
@@ -152,6 +163,7 @@ function StatusBadge({ status }: { status: string | null }) {
 }
 
 function TypeBadge({ type }: { type: ScheduledTask['type'] }) {
+  const { t } = useLanguage();
   const map = {
     restart: 'bg-blue-500/10 text-blue-500 border-blue-500/30',
     backup:  'bg-green-500/10 text-green-500 border-green-500/30',
@@ -159,7 +171,7 @@ function TypeBadge({ type }: { type: ScheduledTask['type'] }) {
   };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold border ${map[type]}`}>
-      {type}
+      {t(`tasks.${type}`, type)}
     </span>
   );
 }
@@ -181,6 +193,7 @@ function SortableStep({
   onRemove: (i: number) => void;
   textPrimary: string; textSecondary: string; borderColor: string;
 }) {
+  const { t } = useLanguage();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
   return (
     <div
@@ -194,7 +207,7 @@ function SortableStep({
         <GripVertical className="w-3.5 h-3.5" />
       </button>
       <span className={`text-xs font-mono w-20 flex-shrink-0 ${textSecondary}`}>
-        {step.type === 'game_command' ? 'command' : 'sleep'}
+        {step.type === 'game_command' ? t('tasks.command', 'command') : t('tasks.sleep', 'sleep')}
       </span>
       {step.type === 'game_command' ? (
         <input
@@ -212,7 +225,7 @@ function SortableStep({
         />
       )}
       {step.type === 'sleep' && (
-        <span className={`text-xs ${textSecondary}`}>seconds</span>
+        <span className={`text-xs ${textSecondary}`}>{t('tasks.seconds', 'seconds')}</span>
       )}
       <AppButton type="button" tone="ghost" onClick={() => onRemove(index)}
         className="p-1 text-gray-400 hover:text-red-400 rounded flex-shrink-0">
@@ -223,6 +236,7 @@ function SortableStep({
 }
 
 function StepsEditor({ label, steps, onChange, textPrimary, textSecondary, borderColor }: StepsEditorProps) {
+  const { t } = useLanguage();
   const idsRef = useRef<number[]>([]);
   const nextIdRef = useRef(0);
 
@@ -260,19 +274,19 @@ function StepsEditor({ label, steps, onChange, textPrimary, textSecondary, borde
             onClick={() => addStep({ type: 'game_command', command: '' })}
             className="flex items-center gap-1 text-xs text-[var(--gp-ods-accent-primary)] hover:text-[var(--gp-ods-accent-secondary)] px-2 py-1 rounded"
           >
-            <Plus className="w-3 h-3" /> Command
+            <Plus className="w-3 h-3" /> {t('tasks.command', 'Command')}
           </AppButton>
           <AppButton
             type="button" tone="ghost"
             onClick={() => addStep({ type: 'sleep', seconds: 30 })}
             className="flex items-center gap-1 text-xs text-[var(--gp-ods-accent-primary)] hover:text-[var(--gp-ods-accent-secondary)] px-2 py-1 rounded"
           >
-            <Clock className="w-3 h-3" /> Sleep
+            <Clock className="w-3 h-3" /> {t('tasks.sleep', 'Sleep')}
           </AppButton>
         </div>
       </div>
       {steps.length === 0 && (
-        <p className={`text-xs italic ${textSecondary}`}>No steps.</p>
+        <p className={`text-xs italic ${textSecondary}`}>{t('tasks.noSteps', 'No steps.')}</p>
       )}
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={idsRef.current} strategy={verticalListSortingStrategy}>
@@ -328,6 +342,7 @@ export function ScheduledTasksTab({
   inputBg: _inputBg,
   inputBorder,
 }: ScheduledTasksTabProps) {
+  const { t } = useLanguage();
   const isExternal = serverProvider === 'external';
   const showPrePost = !isExternal;
   const showIncludeServerArtifact =
@@ -357,7 +372,7 @@ export function ScheduledTasksTab({
       const res = await apiClient.getScheduledTasks(serverId);
       setTasks((res.tasks ?? []) as ScheduledTask[]);
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Failed to load scheduled tasks');
+      setError(err?.response?.data?.error || t('tasks.loadError', 'Failed to load scheduled tasks'));
     } finally {
       setLoading(false);
     }
@@ -385,8 +400,8 @@ export function ScheduledTasksTab({
 
   const handleSave = async () => {
     if (!serverId) return;
-    if (!form.schedule.trim()) { setFormError('Schedule is required.'); return; }
-    if (form.type === 'custom' && !form.command.trim()) { setFormError('Command is required.'); return; }
+    if (!form.schedule.trim()) { setFormError(t('tasks.scheduleRequired', 'Schedule is required.')); return; }
+    if (form.type === 'custom' && !form.command.trim()) { setFormError(t('tasks.commandRequired', 'Command is required.')); return; }
     setSaving(true);
     setFormError(null);
     try {
@@ -409,7 +424,7 @@ export function ScheduledTasksTab({
       closeForm();
       await load();
     } catch (err: any) {
-      setFormError(err?.response?.data?.error || 'Failed to save task');
+      setFormError(err?.response?.data?.error || t('tasks.saveError', 'Failed to save task'));
     } finally {
       setSaving(false);
     }
@@ -418,15 +433,17 @@ export function ScheduledTasksTab({
   const handleDelete = (task: ScheduledTask) => {
     if (!serverId) return;
     setConfirmModal({
-      title: 'Delete Task',
-      message: `Delete this "${task.type}" scheduled task? This action cannot be undone.`,
+      title: t('tasks.deleteTitle', 'Delete Task'),
+      message: t('tasks.deleteMessage', `Delete this "${task.type}" scheduled task? This action cannot be undone.`, {
+        type: t(`tasks.${task.type}`, task.type),
+      }),
       onConfirm: async () => {
         setDeletingId(task.id);
         try {
           await apiClient.deleteScheduledTask(serverId, task.id);
           await load();
         } catch (err: any) {
-          setError(err?.response?.data?.error || 'Failed to delete task');
+          setError(err?.response?.data?.error || t('tasks.deleteError', 'Failed to delete task'));
         } finally {
           setDeletingId(null);
         }
@@ -447,9 +464,9 @@ export function ScheduledTasksTab({
   const inputCls = `w-full rounded-lg bg-white dark:bg-[#0f1723]/60 border ${inputBorder} ${textPrimary} text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--gp-ods-accent-primary)] focus:border-transparent transition-all`;
 
   const availableTypes: Array<{ value: TaskForm['type']; label: string }> = [
-    { value: 'restart', label: 'Restart' },
-    ...(serverBackupSupported ? [{ value: 'backup' as const, label: 'Backup' }] : []),
-    { value: 'custom', label: 'Custom Command' },
+    { value: 'restart', label: t('tasks.restart', 'Restart') },
+    ...(serverBackupSupported ? [{ value: 'backup' as const, label: t('tasks.backup', 'Backup') }] : []),
+    { value: 'custom', label: t('tasks.custom', 'Custom Command') },
   ];
 
   return (
@@ -462,7 +479,7 @@ export function ScheduledTasksTab({
         icon="danger"
         onConfirm={confirmModal.onConfirm}
         onClose={() => setConfirmModal(null)}
-        confirmText="Delete"
+        confirmText={t('common.delete', 'Delete')}
         confirmButtonClass="bg-red-600 hover:bg-red-500"
       />
     )}
@@ -472,9 +489,9 @@ export function ScheduledTasksTab({
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h3 className={`text-2xl font-bold ${textPrimary} mb-2`}>Scheduled Tasks</h3>
+            <h3 className={`text-2xl font-bold ${textPrimary} mb-2`}>{t('tasks.title', 'Scheduled Tasks')}</h3>
             <p className={`text-sm ${textSecondary}`}>
-              Automate restarts, backups and custom commands on a cron schedule
+              {t('tasks.description', 'Automate restarts, backups and custom commands on a cron schedule')}
             </p>
           </div>
           <div className="flex gap-2">
@@ -491,7 +508,7 @@ export function ScheduledTasksTab({
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
               >
                 {editingId !== null ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                {editingId !== null ? 'Cancel' : 'Add Task'}
+                {editingId !== null ? t('common.cancel', 'Cancel') : t('tasks.add', 'Add Task')}
               </AppButton>
             )}
           </div>
@@ -503,13 +520,13 @@ export function ScheduledTasksTab({
         {editingId !== null && (
           <div className={`${contentBg} border ${borderColor} rounded-lg p-5 space-y-5`}>
             <h4 className={`text-base font-semibold ${textPrimary}`}>
-              {editingId === -1 ? 'New Task' : 'Edit Task'}
+              {editingId === -1 ? t('tasks.new', 'New Task') : t('tasks.edit', 'Edit Task')}
             </h4>
 
             {/* Type */}
             <div>
               <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 ${textSecondary}`}>
-                Type
+                {t('tasks.type', 'Type')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {availableTypes.map(({ value, label }) => (
@@ -533,7 +550,7 @@ export function ScheduledTasksTab({
             {/* Schedule */}
             <div>
               <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 ${textSecondary}`}>
-                Schedule
+                {t('tasks.schedule', 'Schedule')}
               </label>
               <CronPicker
                 key={editingId ?? undefined}
@@ -548,9 +565,9 @@ export function ScheduledTasksTab({
 
             {/* Enabled */}
             <div className={`flex items-center justify-between p-3 rounded-lg border ${borderColor} bg-gray-50 dark:bg-gray-900/30`}>
-              <p className={`text-sm font-medium ${textPrimary}`}>Enabled</p>
+              <p className={`text-sm font-medium ${textPrimary}`}>{t('tasks.enabled', 'Enabled')}</p>
               <AppToggle
-                ariaLabel="Task enabled"
+                ariaLabel={t('tasks.enabledAria', 'Task enabled')}
                 checked={form.enabled}
                 size="standard"
                 onChange={(v) => setF('enabled', v)}
@@ -561,11 +578,11 @@ export function ScheduledTasksTab({
             {form.type === 'backup' && showIncludeServerArtifact && (
               <div className={`flex items-center justify-between p-3 rounded-lg border ${borderColor} bg-gray-50 dark:bg-gray-900/30`}>
                 <div>
-                  <p className={`text-sm font-medium ${textPrimary}`}>Include server artifact</p>
-                  <p className={`text-xs ${textSecondary}`}>Back up the downloadable Minecraft server file</p>
+                  <p className={`text-sm font-medium ${textPrimary}`}>{t('tasks.includeArtifact', 'Include server artifact')}</p>
+                  <p className={`text-xs ${textSecondary}`}>{t('tasks.includeArtifactDescription', 'Back up the downloadable Minecraft server file')}</p>
                 </div>
                 <AppToggle
-                  ariaLabel="Include server artifact"
+                  ariaLabel={t('tasks.includeArtifact', 'Include server artifact')}
                   checked={form.includeServerArtifact}
                   size="standard"
                   onChange={(v) => setF('includeServerArtifact', v)}
@@ -578,7 +595,7 @@ export function ScheduledTasksTab({
               <div className="space-y-4">
                 <div>
                   <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 ${textSecondary}`}>
-                    Command <span className="text-red-400">*</span>
+                    {t('tasks.command', 'Command')} <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -590,7 +607,7 @@ export function ScheduledTasksTab({
                 </div>
                 <div>
                   <label className={`block text-xs font-semibold uppercase tracking-wider mb-2 ${textSecondary}`}>
-                    Working directory <span className={`normal-case font-normal ${textSecondary}`}>(optional)</span>
+                    {t('tasks.workdir', 'Working directory')} <span className={`normal-case font-normal ${textSecondary}`}>({t('common.optional', 'optional')})</span>
                   </label>
                   <input
                     type="text"
@@ -607,7 +624,7 @@ export function ScheduledTasksTab({
             {showPrePost && (
               <div className="space-y-5">
                 <StepsEditor
-                  label="Pre-commands"
+                  label={t('tasks.preCommands', 'Pre-commands')}
                   steps={form.pre}
                   onChange={(v) => setF('pre', v)}
                   textPrimary={textPrimary}
@@ -615,7 +632,7 @@ export function ScheduledTasksTab({
                   borderColor={borderColor}
                 />
                 <StepsEditor
-                  label="Post-commands"
+                  label={t('tasks.postCommands', 'Post-commands')}
                   steps={form.post}
                   onChange={(v) => setF('post', v)}
                   textPrimary={textPrimary}
@@ -634,7 +651,7 @@ export function ScheduledTasksTab({
             <div className="flex gap-3 justify-end pt-1">
               <AppButton tone="ghost" onClick={closeForm}
                 className={`px-4 py-2 rounded-lg text-sm font-medium ${textSecondary} border ${borderColor} hover:bg-gray-100 dark:hover:bg-white/10`}>
-                Cancel
+                {t('common.cancel', 'Cancel')}
               </AppButton>
               <AppButton
                 tone="primary"
@@ -643,7 +660,7 @@ export function ScheduledTasksTab({
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
-                {saving ? 'Saving…' : 'Save task'}
+                {saving ? t('common.saving', 'Saving…') : t('tasks.save', 'Save task')}
               </AppButton>
             </div>
           </div>
@@ -659,14 +676,14 @@ export function ScheduledTasksTab({
         {!loading && tasks.length === 0 && (
           <div className={`${contentBg} border ${borderColor} rounded-lg p-8 flex flex-col items-center gap-3`}>
             <Clock className="w-8 h-8 text-gray-400" />
-            <p className={`text-sm ${textSecondary}`}>No scheduled tasks yet.</p>
+            <p className={`text-sm ${textSecondary}`}>{t('tasks.none', 'No scheduled tasks yet.')}</p>
             {canWrite && editingId === null && (
               <AppButton
                 tone="primary"
                 onClick={openNew}
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
               >
-                <Plus className="w-4 h-4" /> Add your first task
+                <Plus className="w-4 h-4" /> {t('tasks.addFirst', 'Add your first task')}
               </AppButton>
             )}
           </div>
@@ -675,7 +692,7 @@ export function ScheduledTasksTab({
         {!loading && tasks.length > 0 && (
           <div className="space-y-3">
             {tasks.map((task) => {
-              const desc = describeCron(task.schedule, task.nextRunAt);
+              const desc = describeCron(task.schedule, t, task.nextRunAt);
               return (
                 <div
                   key={task.id}
@@ -691,12 +708,12 @@ export function ScheduledTasksTab({
                       <StatusBadge status={task.lastStatus} />
                       {task.nextRunAt && (
                         <span className={`text-xs ${textSecondary}`}>
-                          Next: {formatRelative(task.nextRunAt)}
+                          {t('tasks.next', 'Next')}: {formatRelative(task.nextRunAt, t)}
                         </span>
                       )}
                       {task.lastRunAt && (
                         <span className={`text-xs ${textSecondary}`}>
-                          Last: {formatRelative(task.lastRunAt)}
+                          {t('tasks.last', 'Last')}: {formatRelative(task.lastRunAt, t)}
                         </span>
                       )}
                     </div>
@@ -708,7 +725,7 @@ export function ScheduledTasksTab({
                   {/* Right: toggle + actions */}
                   <div className="flex items-center gap-3 flex-shrink-0">
                     <AppToggle
-                      ariaLabel="Task enabled"
+                      ariaLabel={t('tasks.enabledAria', 'Task enabled')}
                       checked={task.enabled}
                       size="standard"
                       onChange={() => handleToggleEnabled(task)}
