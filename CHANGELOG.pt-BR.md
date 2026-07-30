@@ -30,6 +30,10 @@
 
 ### Alterado
 
+- **Fuso configurável nos logs** — os horários do console podem ser fixados com
+  `VITE_LOG_TIME_ZONE`; a imagem do Palworld agora inclui a base IANA e aceita a
+  variável padrão `TZ` por servidor.
+
 - Instalação, atualização, rollback e backend permanecem apontados para
   `elvisfalmeida/game-panel`.
 

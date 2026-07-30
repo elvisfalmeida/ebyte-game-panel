@@ -28,6 +28,7 @@ RUN dpkg --add-architecture i386 \
    lib32stdc++6 \
    libicu74 \
    netcat-openbsd \
+   tzdata \
    tar \
    unzip \
    && rm -rf /var/lib/apt/lists/*
@@ -59,6 +60,7 @@ ENV PALWORLD_INSTALL_DIR=/data/server
 ENV RUNTIME_DIR=/run/palworld
 ENV STEAMCMD_DIR=/opt/steamcmd
 ENV GAMESERVER_SERVER_TYPE=palworld
+ENV TZ=UTC
 
 EXPOSE 8211/udp
 EXPOSE 27015/udp

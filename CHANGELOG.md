@@ -32,6 +32,10 @@
 
 ### 🔧 Changed
 
+- **Configurable log time zone** — console timestamps can be pinned with
+  `VITE_LOG_TIME_ZONE`; the Palworld image now includes IANA time-zone data and
+  supports the standard per-server `TZ` environment variable.
+
 - **Self-update source** — installation, update, rollback, and backend defaults
   now keep deployments on `elvisfalmeida/game-panel` instead of silently
   switching back to the OVHcloud repository.
