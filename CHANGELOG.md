@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Refined the Audit and notifications interface with responsive section
+  navigation, consistent form spacing, clearer channel status, improved inbox
+  cards, deliberate filter application, and light/dark theme polish.
 - Added root-only global auditing, an in-panel notification inbox, encrypted
   Telegram settings and severity-based Telegram delivery with a built-in test.
 - Added independent GHCR publishing for every native runtime and the updater,
