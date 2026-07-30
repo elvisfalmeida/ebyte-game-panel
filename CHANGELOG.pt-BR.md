@@ -46,6 +46,10 @@
 
 ### Alterado
 
+- **Interface de Conteúdo do painel** — o editor agora separa Notícias,
+  Sidebar e Recursos em seções navegáveis, apresenta contagens e alterações
+  pendentes, compacta os itens editáveis e melhora campos, ações,
+  responsividade e temas claro/escuro.
 - **Interface de auditoria e alertas** — navegação, formulários, botões,
   filtros, cartões de notificação, tabela e status do Telegram foram refinados
   para melhorar espaçamento, hierarquia visual, responsividade e temas

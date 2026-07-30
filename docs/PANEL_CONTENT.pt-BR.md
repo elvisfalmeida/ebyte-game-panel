@@ -15,6 +15,16 @@ valida URLs, limites e campos obrigatórios antes de gravar. A substituição é
 atômica quando o armazenamento permite; em bind mounts do Docker, o conteúdo
 completo já validado é gravado diretamente por limitação do sistema de arquivos.
 
+A interface divide o conteúdo em **Notícias**, **Links da barra lateral** e
+**Recursos e tutoriais**, mantendo as alterações em memória ao trocar de seção.
+Os cartões de resumo exibem a quantidade de itens e o estado ativo de cada
+área. O botão de publicação fica habilitado somente quando há alterações, que
+são identificadas como ainda não publicadas até a confirmação do backend.
+
+Cada item local aparece em um cartão compacto numerado, com identificação,
+campos e ação de exclusão agrupados. Em fontes remotas, o editor troca a lista
+local por um campo dedicado para o endpoint e um atalho para abrir a URL.
+
 O Ebyte Game Panel lê notícias, links sociais e Recursos de:
 
 ```text
