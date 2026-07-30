@@ -14,7 +14,7 @@ LABEL org.opencontainers.image.title="Minecraft Java Edition Server Image" \
       org.opencontainers.image.revision="${IMAGE_REVISION}" \
       org.opencontainers.image.version="${IMAGE_VERSION}" \
       org.opencontainers.image.source="${IMAGE_SOURCE}" \
-      org.opencontainers.image.vendor="OVHcloud" \
+      org.opencontainers.image.vendor="Ebyte" \
       org.opencontainers.image.licenses="Apache-2.0" \
       org.opencontainers.image.base.name="eclipse-temurin:${JAVA_VERSION}-jre"
 

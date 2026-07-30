@@ -2,6 +2,9 @@
 
 This directory holds the Docker image sources maintained alongside Ebyte Game Panel — the game server runtimes it deploys, and the panel's own operational images.
 
+Published images use the `ghcr.io/elvisfalmeida/ebyte-game-panel-*` namespace.
+See the [container registry documentation](../docs/CONTAINER_IMAGES.md).
+
 ## 🎮 Game server images
 
 | Image family | Path | Purpose |

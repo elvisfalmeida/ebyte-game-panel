@@ -116,6 +116,7 @@ Under the hood, a **React + Vite** frontend talks to a **Node.js** backend (Expr
 - 📡 [Telemetry](docs/TELEMETRY.md)
 - 🎨 [Brand customization](docs/BRANDING.md)
 - 📰 [Panel content](docs/PANEL_CONTENT.md)
+- 🐳 [Project container images](docs/CONTAINER_IMAGES.md)
 
 ## 📄 License
 

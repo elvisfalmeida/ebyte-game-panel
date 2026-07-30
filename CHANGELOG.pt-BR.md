@@ -6,6 +6,9 @@
 
 ### Adicionado
 
+- **Registro de contêiner independente** — todas as imagens nativas e o
+  atualizador passam a ser construídos no GitHub Actions e publicados no GHCR
+  do Ebyte com tags de versão, commit, SBOM e atestação de procedência.
 - **Editor visual de conteúdo** — o usuário root pode publicar notícias, links
   sociais, recursos e tutoriais pela interface, com fontes locais/remotas,
   validação no backend, gravação compatível com bind mounts e atualização

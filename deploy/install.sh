@@ -708,7 +708,7 @@ main() {
   write_compose_file
 
   log "Pulling updater image..."
-  updater_image="ovhcom/gamepanel-updater:${APP_VERSION}"
+  updater_image="ghcr.io/elvisfalmeida/ebyte-game-panel-updater:${APP_VERSION}"
   if docker pull "$updater_image"; then
     log "Updater image is available: $updater_image"
   else
