@@ -468,6 +468,12 @@ EOF
 }
 
 write_compose_file() {
+  if [[ ! -f "$DEPLOY_DIR/panel-content.json" ]]; then
+    cp "$APP_ROOT/frontend/public/panel-content.json" "$DEPLOY_DIR/panel-content.json"
+    chown root:"$APP_GROUP" "$DEPLOY_DIR/panel-content.json"
+    chmod 0660 "$DEPLOY_DIR/panel-content.json"
+  fi
+
   cat >"$COMPOSE_FILE" <<'EOF'
 services:
   traefik:
@@ -535,6 +541,8 @@ services:
       args:
         VITE_DB_API_BASE_URL: "${VITE_DB_API_BASE_URL}"
         VITE_LOG_TIME_ZONE: "${VITE_LOG_TIME_ZONE}"
+    volumes:
+      - "./panel-content.json:/usr/share/nginx/html/panel-content.json:ro"
     networks:
       - web
     restart: unless-stopped

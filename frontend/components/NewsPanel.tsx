@@ -17,6 +17,7 @@ import {
 import { apiClient, type CatalogNewsItem } from '../utils/api';
 import { AppBadge, AppButton, AppCard } from '../src/ui/components';
 import { useLanguage } from '../contexts/LanguageContext';
+import { usePanelContent } from '../contexts/PanelContentContext';
 
 const NEWS_ICON_KEYS = [
   'server',
@@ -82,6 +83,7 @@ function renderDescriptionWithLinks(text: string) {
 
 export function NewsPanel() {
   const { locale, t } = useLanguage();
+  const { news } = usePanelContent();
   const [visible, setVisible] = useState(() => localStorage.getItem('gp_news_visible') !== 'false');
   const [newsItems, setNewsItems] = useState<CatalogNewsItem[]>([]);
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
@@ -92,7 +94,21 @@ export function NewsPanel() {
 
     const loadNews = async () => {
       try {
-        const response = await apiClient.getNews(20);
+        if (!news.enabled) {
+          setNewsItems([]);
+          return;
+        }
+        if (news.source === 'local') {
+          setNewsItems(news.items);
+          setCurrentNewsIndex(0);
+          return;
+        }
+        const response = news.remoteUrl
+          ? await fetch(`${news.remoteUrl.replace(/\/$/, '')}/news?limit=20`).then((result) => {
+              if (!result.ok) throw new Error(`News source returned ${result.status}`);
+              return result.json() as Promise<{ news: CatalogNewsItem[] }>;
+            })
+          : await apiClient.getNews(20);
         if (cancelled) return;
 
         setNewsItems(Array.isArray(response.news) ? response.news : []);
@@ -111,17 +127,17 @@ export function NewsPanel() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [news.enabled, news.source, news.remoteUrl, news.items]);
 
   useEffect(() => {
     if (newsItems.length <= 1 || isPaused) return;
 
     const interval = window.setInterval(() => {
       setCurrentNewsIndex((prev) => (prev + 1) % newsItems.length);
-    }, 15000);
+    }, Math.max(5, news.rotationSeconds) * 1000);
 
     return () => window.clearInterval(interval);
-  }, [newsItems.length, isPaused]);
+  }, [newsItems.length, isPaused, news.rotationSeconds]);
 
   useEffect(() => {
     if (newsItems.length === 0) {
@@ -176,6 +192,8 @@ export function NewsPanel() {
         return <Sparkles className="w-5 h-5" />;
     }
   };
+
+  if (!news.enabled) return null;
 
   if (!visible) {
     return (
@@ -300,4 +318,3 @@ export function NewsPanel() {
     </AppCard>
   );
 }
-

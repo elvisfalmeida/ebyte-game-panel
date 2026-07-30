@@ -2,7 +2,7 @@
 
 [English](TELEMETRY.md) · [Português (Brasil)](TELEMETRY.pt-BR.md)
 
-OVHcloud Game Panel sends anonymous usage telemetry by default. The collected data helps guide development priorities and improve support for the most-used games.
+Ebyte Game Panel sends anonymous usage telemetry by default. The collected data helps guide development priorities and improve support for the most-used games.
 
 ## Sent on panel install / update
 

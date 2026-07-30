@@ -13,7 +13,7 @@
 
 </div>
 
-O OVHcloud Game Panel é um painel de controle **open source e auto-hospedado**
+O Ebyte Game Panel é um painel de controle **open source e auto-hospedado**
 para implantar, executar e monitorar servidores de jogos. Ele permite administrar
 arquivos, backups, jogadores, desempenho e o ciclo de vida dos servidores sem
 depender do terminal.
@@ -93,6 +93,7 @@ Recursos.
 
 ## 📚 Documentação
 
+- [Conteúdo do painel](docs/PANEL_CONTENT.pt-BR.md)
 - [Fusos horários](docs/TIMEZONE.pt-BR.md)
 - [Configurações ampliadas do Palworld](docs/PALWORLD_SETTINGS.pt-BR.md)
 - [Telemetria](docs/TELEMETRY.pt-BR.md)
@@ -102,3 +103,11 @@ Recursos.
 ## 📄 Licença
 
 Licenciado sob a Apache License 2.0. Consulte [LICENSE](LICENSE).
+
+## Créditos
+
+O Ebyte Game Panel deriva do
+[OVHcloud Game Panel](https://github.com/ovh/game-panel), distribuído sob a
+licença Apache 2.0. OVHcloud e LinuxGSM permanecem creditados pelo projeto
+original, integrações de provedores e trabalhos upstream relacionados. A marca
+Ebyte e estas personalizações não indicam endosso da OVHcloud.

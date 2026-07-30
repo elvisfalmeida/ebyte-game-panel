@@ -6,6 +6,9 @@
 
 ### Adicionado
 
+- **Conteúdo do painel em tempo de execução** — notícias, links da barra lateral
+  e Recursos podem usar conteúdo JSON local ou fontes remotas independentes,
+  sem depender do catálogo da OVHcloud.
 - **Identidade Ebyte** — emblema próprio, nome e logo configuráveis, favicon,
   login, barra lateral, cabeçalho mobile e título do navegador.
 - **Camada de tradução legada** — cobre configurações, administração de usuários,
