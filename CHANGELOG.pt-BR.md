@@ -6,6 +6,10 @@
 
 ### Adicionado
 
+- **Palworld comunitário e crossplay** — novos servidores são publicados com
+  `-publiclobby`, detectam o IPv4 público, anunciam a porta UDP 8211 e expõem
+  IP, porta e parâmetros de inicialização na interface. A imagem Palworld fica
+  fixada na versão independente `1.2.1`.
 - **Auditoria e notificações** — registro administrativo global, central de
   alertas lidos/não lidos e integração com Telegram por severidade, com
   credenciais cifradas e envio de teste pela interface.

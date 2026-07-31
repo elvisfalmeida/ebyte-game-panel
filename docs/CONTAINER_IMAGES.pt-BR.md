@@ -19,6 +19,10 @@ publicação inclui:
 - atestação de procedência;
 - metadados OCI com repositório, revisão, versão, fornecedor e licença.
 
+A imagem Palworld `1.2.1` torna o modo comunitário o padrão e monta os
+argumentos de publicação com o IPv4 público detectado. Um valor explícito em
+`PALWORLD_START_PARAMS` sempre tem prioridade.
+
 ## Independência operacional
 
 O catálogo nativo, o instalador e o atualizador apontam para o namespace Ebyte.
@@ -32,8 +36,8 @@ contêiner usa os canais oficiais do jogo durante a instalação e continua suje
 ## Publicação
 
 Uma tag Git `vX.Y.Z` publica todas as famílias. Também é possível iniciar
-manualmente **Publicar imagens de contêiner** em GitHub Actions e informar a
-versão desejada.
+manualmente **Publicar imagens de contêiner** em GitHub Actions, informar a
+versão desejada e, opcionalmente, publicar apenas uma família da matriz.
 
 Novas famílias de imagens devem ser incluídas na matriz do workflow e
 documentadas aqui. Não publique credenciais, arquivos persistentes do servidor

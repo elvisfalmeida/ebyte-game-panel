@@ -65,6 +65,34 @@ export function PalworldSections({
       defaultValue: 'false',
       description: t('palworld.updateOnStartDescription', 'When enabled, the server checks for and installs game updates via SteamCMD each time it starts.'),
     },
+    {
+      key: 'PALWORLD_COMMUNITY_SERVER',
+      label: t('palworld.communityServer', 'Community server'),
+      type: 'toggle',
+      defaultValue: 'true',
+      description: t('palworld.communityServerDescription', 'Publishes the server in the community list using -publiclobby, which is required for Xbox discovery.'),
+    },
+    {
+      key: 'PALWORLD_PUBLIC_IP',
+      label: t('palworld.publicIp', 'Public IP'),
+      type: 'text',
+      defaultValue: '',
+      description: t('palworld.publicIpDescription', 'Public IPv4 advertised by the community server. Leave empty to detect it automatically.'),
+    },
+    {
+      key: 'PALWORLD_PUBLIC_PORT',
+      label: t('palworld.publicPort', 'Public port'),
+      type: 'text',
+      defaultValue: '8211',
+      description: t('palworld.publicPortDescription', 'External UDP game port advertised to players. This is normally 8211, not the Steam query port 27015.'),
+    },
+    {
+      key: 'PALWORLD_START_PARAMS',
+      label: t('palworld.startParams', 'Startup parameters'),
+      type: 'text',
+      defaultValue: '',
+      description: t('palworld.startParamsDescription', 'Optional explicit arguments. When filled, this value overrides automatic community-server argument generation.'),
+    },
   ];
   const showSettingsTab = canReadSettings || Boolean(canManageEnv);
   const showWipeTab = buildWipeModes('palworld', {

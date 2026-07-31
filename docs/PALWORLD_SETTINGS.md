@@ -2,7 +2,7 @@
 
 [English](PALWORLD_SETTINGS.md) · [Português (Brasil)](PALWORLD_SETTINGS.pt-BR.md)
 
-This fork expands the Palworld settings screen from a small curated form to a
+Ebyte Game Panel expands the Palworld settings screen from a small curated form to a
 searchable interface generated from the game version installed on each server.
 It currently exposes 115 settings from Palworld's
 `DefaultPalWorldSettings.ini`.
@@ -49,6 +49,31 @@ Changing these values directly can break panel integration. Use the server's
 container configuration or port controls when an operational change is
 required.
 
+## Community server and crossplay
+
+New Palworld servers start as community servers by default. The image detects
+the host's public IPv4 address and generates:
+
+```text
+-publiclobby -publicip=<public IPv4> -publicport=8211
+```
+
+This advertises the server in the community list used by Xbox. The game port is
+`8211/UDP`; `27015/UDP` remains the query port.
+
+The controls are available under **Settings → Container → Palworld**:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `PALWORLD_COMMUNITY_SERVER` | `true` | Enables `-publiclobby` |
+| `PALWORLD_PUBLIC_IP` | automatic | Overrides public IPv4 detection |
+| `PALWORLD_PUBLIC_PORT` | `8211` | Sets the advertised public port |
+| `PALWORLD_START_PARAMS` | empty | Completely overrides automatic arguments |
+
+If IP detection fails, the image still starts with `-publiclobby` and lets
+Palworld detect the address. On NAT hosts, set the public IP manually and
+forward `8211/UDP` to the host.
+
 ## Applying changes
 
 1. Open the Palworld server in the panel.
@@ -71,29 +96,8 @@ ItemWeightRate=0
 
 These disable building deterioration and item weight respectively.
 
-## Keeping the fork current
+## Independent project
 
-The local Git remotes should use:
-
-```text
-origin    https://github.com/elvisfalmeida/ebyte-game-panel.git
-upstream  https://github.com/ovh/game-panel.git
-```
-
-To bring upstream changes into a development branch:
-
-```bash
-git fetch upstream
-git switch main
-git merge --ff-only origin/main
-git switch -c agent/sync-upstream
-git merge upstream/main
-```
-
-Resolve and test any conflicts before merging the synchronization branch into
-the fork's `main`. In particular, verify the Palworld settings API and frontend
-production builds after upstream changes to either settings component.
-
-New installations from this fork set `GAMEPANEL_REPOSITORY_URL` to the fork,
-so the built-in updater does not silently switch the installation back to the
-OVHcloud repository.
+Ebyte Game Panel is maintained and distributed from its own repository. It
+preserves the credits and license notices for the original work while code,
+catalog, and container image updates are versioned and validated independently.
