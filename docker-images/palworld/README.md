@@ -39,7 +39,10 @@ Boolean inputs accept `true` / `false` (and `1`, `yes`, `on` / `0`, `no`, `off`)
 
 | Input | Default | Allowed values | Purpose |
 | --- | --- | --- | --- |
-| `PALWORLD_START_PARAMS` | *(empty)* | any launch args | Startup parameters passed to the dedicated server. |
+| `PALWORLD_START_PARAMS` | *(automatic)* | any launch args | Explicit startup parameters. When set, overrides automatic community-server arguments. |
+| `PALWORLD_COMMUNITY_SERVER` | `true` | boolean | Publish as a community server with `-publiclobby`, required for discovery from Xbox. |
+| `PALWORLD_PUBLIC_IP` | *(auto-detected)* | public IPv4 | Public IPv4 advertised by the community server. |
+| `PALWORLD_PUBLIC_PORT` | `8211` | UDP port | Public game port advertised by the community server. This is not the Steam query port. |
 | `PALWORLD_ADMIN_PASSWORD` | *(generated)* | any string | REST API + in-game admin password. Generated randomly if unset. |
 | `PALWORLD_UPDATE_ON_START` | `false` | boolean | Run a SteamCMD update on every start. |
 | `PALWORLD_VALIDATE_ON_START` | `false` | boolean | Validate installed files via SteamCMD on start. |

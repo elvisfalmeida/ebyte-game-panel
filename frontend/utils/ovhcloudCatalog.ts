@@ -19,6 +19,7 @@ export interface OvhcloudImage {
 
 const REGISTRY = 'ghcr.io/elvisfalmeida';
 const VERSION = getAppVersion().replace(/^v/, '');
+const PALWORLD_IMAGE_VERSION = '1.2.1';
 
 function ovhImage(name: string): string {
   return `${REGISTRY}/${name.replace(/^gamepanel-/, 'ebyte-game-panel-')}:${VERSION}`;
@@ -157,13 +158,17 @@ export const OVHCLOUD_IMAGES: OvhcloudImage[] = [
     imageId: 'palworld',
     name: 'Palworld',
     family: 'palworld',
-    dockerImage: ovhImage('gamepanel-palworld'),
+    dockerImage: `${REGISTRY}/ebyte-game-panel-palworld:${PALWORLD_IMAGE_VERSION}`,
     defaultTcpPorts: [],
     defaultUdpPorts: [
       { port: 8211, label: 'Game' },
       { port: 27015, label: 'Steam Query' },
     ],
-    defaultEnv: { PALWORLD_UPDATE_ON_START: 'false' },
+    defaultEnv: {
+      PALWORLD_UPDATE_ON_START: 'false',
+      PALWORLD_COMMUNITY_SERVER: 'true',
+      PALWORLD_PUBLIC_PORT: '8211',
+    },
     requiredEnvKeys: [],
     supportsHytaleOptions: false,
   },

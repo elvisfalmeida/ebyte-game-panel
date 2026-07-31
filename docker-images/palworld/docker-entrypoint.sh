@@ -9,6 +9,9 @@ PALWORLD_STEAM_APP_ID="${PALWORLD_STEAM_APP_ID:-2394010}"
 PALWORLD_UPDATE_ON_START="${PALWORLD_UPDATE_ON_START:-false}"
 PALWORLD_VALIDATE_ON_START="${PALWORLD_VALIDATE_ON_START:-false}"
 PALWORLD_START_PARAMS="${PALWORLD_START_PARAMS:-}"
+PALWORLD_COMMUNITY_SERVER="${PALWORLD_COMMUNITY_SERVER:-true}"
+PALWORLD_PUBLIC_IP="${PALWORLD_PUBLIC_IP:-}"
+PALWORLD_PUBLIC_PORT="${PALWORLD_PUBLIC_PORT:-8211}"
 PALWORLD_ADMIN_PASSWORD="${PALWORLD_ADMIN_PASSWORD:-}"
 LOG_PREFIX="[palworld]"
 
@@ -44,6 +47,68 @@ setup_steam_runtime_paths() {
   if [ -f "${STEAMCMD_DIR}/linux32/steamclient.so" ]; then
     ln -sf "${STEAMCMD_DIR}/linux32/steamclient.so" "${HOME}/.steam/sdk32/steamclient.so"
   fi
+}
+
+is_valid_public_ipv4() {
+  printf '%s\n' "$1" | awk -F. '
+    NF != 4 { exit 1 }
+    {
+      for (i = 1; i <= 4; i++) {
+        if ($i !~ /^[0-9]+$/ || $i < 0 || $i > 255) exit 1
+      }
+      if ($1 == 0 || $1 == 10 || $1 == 127 || ($1 == 169 && $2 == 254) ||
+          ($1 == 172 && $2 >= 16 && $2 <= 31) || ($1 == 192 && $2 == 168) || $1 >= 224) exit 1
+    }
+  '
+}
+
+detect_public_ipv4() {
+  if [ -n "${PALWORLD_PUBLIC_IP}" ]; then
+    if is_valid_public_ipv4 "${PALWORLD_PUBLIC_IP}"; then
+      printf '%s\n' "${PALWORLD_PUBLIC_IP}"
+      return 0
+    fi
+    die "PALWORLD_PUBLIC_IP is not a valid public IPv4 address."
+  fi
+
+  for LOOKUP_URL in "https://api.ipify.org" "https://ifconfig.me/ip"; do
+    DETECTED_IP="$(curl -4fsS --connect-timeout 3 --max-time 5 "${LOOKUP_URL}" 2>/dev/null | tr -d '[:space:]' || true)"
+    if is_valid_public_ipv4 "${DETECTED_IP}"; then
+      printf '%s\n' "${DETECTED_IP}"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+configure_start_params() {
+  if [ -n "${PALWORLD_START_PARAMS}" ]; then
+    log "Using explicitly configured PALWORLD_START_PARAMS."
+    return 0
+  fi
+
+  if ! is_truthy "${PALWORLD_COMMUNITY_SERVER}"; then
+    log "Community server publishing is disabled."
+    return 0
+  fi
+
+  case "${PALWORLD_PUBLIC_PORT}" in
+    ''|*[!0-9]*) die "PALWORLD_PUBLIC_PORT must be a number between 1 and 65535." ;;
+  esac
+  if [ "${PALWORLD_PUBLIC_PORT}" -lt 1 ] || [ "${PALWORLD_PUBLIC_PORT}" -gt 65535 ]; then
+    die "PALWORLD_PUBLIC_PORT must be a number between 1 and 65535."
+  fi
+
+  PALWORLD_START_PARAMS="-publiclobby"
+  if DETECTED_PUBLIC_IP="$(detect_public_ipv4)"; then
+    PALWORLD_PUBLIC_IP="${DETECTED_PUBLIC_IP}"
+    PALWORLD_START_PARAMS="${PALWORLD_START_PARAMS} -publicip=${PALWORLD_PUBLIC_IP}"
+    log "Community server enabled with public endpoint ${PALWORLD_PUBLIC_IP}:${PALWORLD_PUBLIC_PORT}."
+  else
+    log "Community server enabled; public IP lookup failed, so Palworld will detect it automatically."
+  fi
+  PALWORLD_START_PARAMS="${PALWORLD_START_PARAMS} -publicport=${PALWORLD_PUBLIC_PORT}"
 }
 
 install_or_update_palworld() {
@@ -147,6 +212,7 @@ configure_rest_api() {
 install_or_update_palworld
 
 setup_steam_runtime_paths
+configure_start_params
 
 if [ ! -x "${PALWORLD_SERVER_BIN}" ]; then
   die "Palworld server binary is not executable after install/update: ${PALWORLD_SERVER_BIN}"

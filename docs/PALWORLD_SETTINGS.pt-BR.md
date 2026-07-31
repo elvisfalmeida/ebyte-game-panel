@@ -2,7 +2,7 @@
 
 [English](PALWORLD_SETTINGS.md) · [Português (Brasil)](PALWORLD_SETTINGS.pt-BR.md)
 
-Este fork amplia a tela de configurações do Palworld para uma interface
+O Ebyte Game Panel amplia a tela de configurações do Palworld para uma interface
 pesquisável gerada a partir da própria versão do jogo instalada no servidor.
 Atualmente são disponibilizadas 115 configurações.
 
@@ -41,6 +41,31 @@ Alguns valores operacionais não são exibidos na tela de mundo:
 
 Alterar esses valores diretamente pode interromper a integração com o painel.
 
+## Servidor comunitário e crossplay
+
+Novos servidores Palworld iniciam como servidores comunitários por padrão. A
+imagem gera os argumentos abaixo, detectando o IPv4 público da máquina:
+
+```text
+-publiclobby -publicip=<IPv4 público> -publicport=8211
+```
+
+Isso permite que o servidor seja anunciado na lista comunitária usada pelo
+Xbox. A porta do jogo é `8211/UDP`; `27015/UDP` permanece como porta de consulta.
+
+Os campos ficam em **Configurações → Contêiner → Palworld**:
+
+| Variável | Padrão | Finalidade |
+|---|---|---|
+| `PALWORLD_COMMUNITY_SERVER` | `true` | Ativa `-publiclobby` |
+| `PALWORLD_PUBLIC_IP` | automático | Substitui a detecção do IPv4 público |
+| `PALWORLD_PUBLIC_PORT` | `8211` | Define a porta pública anunciada |
+| `PALWORLD_START_PARAMS` | vazio | Substitui integralmente os argumentos automáticos |
+
+Se a detecção do IP falhar, a imagem ainda inicia com `-publiclobby` e deixa o
+Palworld detectar o endereço. Em máquinas com NAT, informe manualmente o IP
+público e encaminhe `8211/UDP` para o host.
+
 ## Como alterar
 
 1. Abra o servidor Palworld no painel.
@@ -61,25 +86,8 @@ ItemWeightRate=0
 
 Esses valores desativam a deterioração das construções e o peso dos itens.
 
-## Sincronização com o projeto original
+## Projeto independente
 
-O fork utiliza:
-
-```text
-origin    https://github.com/elvisfalmeida/ebyte-game-panel.git
-upstream  https://github.com/ovh/game-panel.git
-```
-
-Para preparar uma atualização:
-
-```bash
-git fetch upstream
-git switch main
-git pull --ff-only origin main
-git switch -c agent/sync-upstream
-git merge upstream/main
-```
-
-Resolva conflitos e valide as compilações antes de integrar a branch na
-`main`. Novas instalações deste fork mantêm
-`GAMEPANEL_REPOSITORY_URL` apontando para o fork.
+O Ebyte Game Panel é mantido e distribuído pelo próprio repositório. O projeto
+preserva os créditos e avisos de licença do trabalho original, mas atualizações
+de código, catálogo e imagens são versionadas e validadas de forma independente.

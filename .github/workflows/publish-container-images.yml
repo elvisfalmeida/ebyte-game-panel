@@ -7,6 +7,10 @@ on:
         description: Versão a publicar, sem o prefixo v
         required: true
         default: "1.2.0"
+      image:
+        description: Nome da matriz a publicar, ou all
+        required: true
+        default: all
   push:
     tags:
       - "v*"
@@ -135,12 +139,15 @@ jobs:
 
     steps:
       - name: Obter código-fonte
+        if: ${{ inputs.image == '' || inputs.image == 'all' || matrix.name == inputs.image }}
         uses: actions/checkout@v4
 
       - name: Preparar Docker Buildx
+        if: ${{ inputs.image == '' || inputs.image == 'all' || matrix.name == inputs.image }}
         uses: docker/setup-buildx-action@v3
 
       - name: Autenticar no GHCR
+        if: ${{ inputs.image == '' || inputs.image == 'all' || matrix.name == inputs.image }}
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -148,6 +155,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Definir metadados
+        if: ${{ inputs.image == '' || inputs.image == 'all' || matrix.name == inputs.image }}
         id: meta
         shell: bash
         env:
@@ -167,6 +175,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Construir e publicar
+        if: ${{ inputs.image == '' || inputs.image == 'all' || matrix.name == inputs.image }}
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}

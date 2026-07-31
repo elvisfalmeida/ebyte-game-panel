@@ -4,6 +4,9 @@
 
 ## Unreleased
 
+- Palworld images now publish community servers by default for Xbox discovery,
+  auto-detect the host public IPv4, advertise UDP port 8211, and expose these
+  controls in the GUI. Palworld runtime image `1.2.1` is pinned independently.
 - Reworked the Panel content editor into compact News, Sidebar, and Resources
   sections, with content summaries, unpublished-change state, responsive item
   cards, clearer source controls, and consistent light/dark styling.
